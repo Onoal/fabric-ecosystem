@@ -1,0 +1,17 @@
+[package]
+name = "fabric-adapter-server-deno"
+version = "0.1.0"
+edition = "2024"
+publish = false
+
+[dependencies]
+hex = "0.4.3"
+nix = { version = "0.30.1", features = ["signal", "process"] }
+sha2 = "0.10.9"
+fabric-resource-server.workspace = true
+ureq = { version = "3.1.2", features = ["json"] }
+url = "2.5.7"
+
+[dev-dependencies]
+fabric-core.workspace = true
+tempfile = "3.23.0"

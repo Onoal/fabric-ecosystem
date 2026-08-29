@@ -1,0 +1,21 @@
+[package]
+name = "fabric-resource-connectivity"
+version = "0.1.0"
+edition = "2024"
+publish = false
+
+[dependencies]
+hex = "0.4.3"
+rusqlite = { version = "0.37.0", features = ["bundled"] }
+sha2 = "0.10.9"
+fabric-resource.workspace = true
+fabric-resource-registry.workspace = true
+fabric-core.workspace = true
+fabric-resource-ingress.workspace = true
+fabric-resource-service.workspace = true
+thiserror = "2.0.20"
+
+[dev-dependencies]
+fabric-adapter-ingress-pingora.workspace = true
+tempfile = "3.23.0"
+ureq = { version = "3.1.2", features = ["json"] }

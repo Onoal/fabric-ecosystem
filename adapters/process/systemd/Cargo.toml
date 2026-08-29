@@ -1,0 +1,18 @@
+[package]
+name = "fabric-adapter-process-systemd"
+version = "0.1.0"
+edition = "2024"
+publish = false
+
+[dependencies]
+sha2 = "0.10.9"
+thiserror = "2.0.20"
+fabric-host.workspace = true
+fabric-resource-process.workspace = true
+fabric-projection.workspace = true
+
+[dev-dependencies]
+serde_json = "1.0.145"
+fabric-resource-registry.workspace = true
+fabric-core.workspace = true
+tempfile = "3.23.0"

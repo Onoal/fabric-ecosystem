@@ -1,0 +1,20 @@
+[package]
+name = "fabric-test-service-materialization"
+version = "0.1.0"
+edition = "2024"
+publish = false
+
+[dependencies]
+fabric-resource-connectivity.workspace = true
+fabric-core.workspace = true
+fabric-component-gateway.workspace = true
+fabric-resource-ingress.workspace = true
+fabric-component-namespace.workspace = true
+fabric-component.workspace = true
+fabric-component-publication.workspace = true
+fabric-resource-service.workspace = true
+
+[dev-dependencies]
+fabric-adapter-ingress-pingora.workspace = true
+tempfile = "3.23.0"
+ureq = { version = "3.1.2", features = ["json"] }

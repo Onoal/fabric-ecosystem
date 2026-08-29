@@ -1,0 +1,15 @@
+[package]
+name = "fabric-resource-kv"
+version = "0.1.0"
+edition = "2024"
+publish = false
+
+[dependencies]
+fabric-binding.workspace = true
+fabric-resource-registry.workspace = true
+fabric-core.workspace = true
+fabric-resource.workspace = true
+
+[dev-dependencies]
+fabric-adapter-kv-fjall.workspace = true
+tempfile = "3.23.0"

@@ -1,0 +1,17 @@
+[package]
+name = "fabric-resource-server"
+version = "0.1.0"
+edition = "2024"
+publish = false
+
+[dependencies]
+hex = "0.4.3"
+rand = "0.9.2"
+fabric-core.workspace = true
+fabric-resource.workspace = true
+fabric-resource-registry.workspace = true
+thiserror = "2.0.20"
+
+[dev-dependencies]
+fabric-resource-service.workspace = true
+tempfile = "3.23.0"

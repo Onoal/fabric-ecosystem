@@ -1,0 +1,34 @@
+[package]
+name = "fabric-test-vertical"
+version = "0.1.0"
+edition = "2024"
+publish = false
+
+[dependencies]
+hex = "0.4.3"
+serde_json = "1.0.145"
+sha2 = "0.10.9"
+fabric-binding.workspace = true
+fabric-component.workspace = true
+fabric-host.workspace = true
+fabric-adapter-authority-cedar.workspace = true
+fabric-resource-authority.workspace = true
+fabric-resource-worker.workspace = true
+fabric-resource-connectivity.workspace = true
+fabric-adapter-database-sqlite.workspace = true
+fabric-resource-database.workspace = true
+fabric-adapter-worker-deno.workspace = true
+fabric-adapter-kv-fjall.workspace = true
+fabric-resource-registry.workspace = true
+fabric-core.workspace = true
+fabric-resource-identity.workspace = true
+fabric-resource-ingress.workspace = true
+fabric-resource-kv.workspace = true
+fabric-resource-process.workspace = true
+fabric-adapter-ingress-pingora.workspace = true
+fabric-projection.workspace = true
+fabric-resource.workspace = true
+fabric-resource-secrets.workspace = true
+fabric-resource-service.workspace = true
+tempfile = "3.23.0"
+ureq = { version = "3.1.2", features = ["json"] }

@@ -1,0 +1,14 @@
+[package]
+name = "fabric-adapter-kv-fjall"
+version = "0.1.0"
+edition = "2024"
+publish = false
+
+[dependencies]
+fjall = { version = "3.1.9", default-features = false, features = ["lz4"] }
+fabric-core.workspace = true
+fabric-resource-kv.workspace = true
+fabric-resource.workspace = true
+
+[dev-dependencies]
+tempfile = "3.23.0"

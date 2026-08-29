@@ -1,0 +1,12 @@
+[package]
+name = "fabric-adapter-database-sqlite"
+version = "0.1.0"
+edition = "2024"
+publish = false
+
+[dependencies]
+rusqlite = { version = "0.37.0", features = ["bundled"] }
+fabric-resource-database.workspace = true
+fabric-core.workspace = true
+fabric-resource.workspace = true
+fabric-resource-registry.workspace = true

@@ -1,0 +1,64 @@
+[workspace]
+members = [
+    "resources/identity",
+    "resources/authority",
+    "resources/secrets",
+    "resources/worker",
+    "resources/server",
+    "resources/process",
+    "resources/database",
+    "resources/kv",
+    "resources/service",
+    "resources/ingress",
+    "resources/connectivity",
+    "adapters/authority/cedar",
+    "adapters/worker/deno",
+    "adapters/server/deno",
+    "adapters/process/systemd",
+    "adapters/database/sqlite",
+    "adapters/kv/fjall",
+    "adapters/ingress/pingora",
+    "components/namespace",
+    "components/publication",
+    "components/gateway",
+    "tests/resource-foundation",
+    "tests/fabric-vertical",
+    "tests/service-materialization",
+]
+resolver = "2"
+
+[workspace.package]
+edition = "2024"
+
+[workspace.dependencies]
+fabric-core = { git = "https://github.com/Onoal/fabric.git", rev = "48e731f6a6bb4f27dfcdc90fce5804e091945251" }
+fabric-host = { git = "https://github.com/Onoal/fabric.git", rev = "48e731f6a6bb4f27dfcdc90fce5804e091945251" }
+fabric-resource = { git = "https://github.com/Onoal/fabric.git", rev = "48e731f6a6bb4f27dfcdc90fce5804e091945251" }
+fabric-binding = { git = "https://github.com/Onoal/fabric.git", rev = "48e731f6a6bb4f27dfcdc90fce5804e091945251" }
+fabric-projection = { git = "https://github.com/Onoal/fabric.git", rev = "48e731f6a6bb4f27dfcdc90fce5804e091945251" }
+fabric-resource-registry = { git = "https://github.com/Onoal/fabric.git", rev = "48e731f6a6bb4f27dfcdc90fce5804e091945251" }
+fabric-component = { git = "https://github.com/Onoal/fabric.git", rev = "48e731f6a6bb4f27dfcdc90fce5804e091945251" }
+
+fabric-resource-identity = { path = "resources/identity" }
+fabric-resource-authority = { path = "resources/authority" }
+fabric-resource-secrets = { path = "resources/secrets" }
+fabric-resource-worker = { path = "resources/worker" }
+fabric-resource-server = { path = "resources/server" }
+fabric-resource-process = { path = "resources/process" }
+fabric-resource-database = { path = "resources/database" }
+fabric-resource-kv = { path = "resources/kv" }
+fabric-resource-service = { path = "resources/service" }
+fabric-resource-ingress = { path = "resources/ingress" }
+fabric-resource-connectivity = { path = "resources/connectivity" }
+
+fabric-adapter-authority-cedar = { path = "adapters/authority/cedar" }
+fabric-adapter-worker-deno = { path = "adapters/worker/deno" }
+fabric-adapter-server-deno = { path = "adapters/server/deno" }
+fabric-adapter-process-systemd = { path = "adapters/process/systemd" }
+fabric-adapter-database-sqlite = { path = "adapters/database/sqlite" }
+fabric-adapter-kv-fjall = { path = "adapters/kv/fjall" }
+fabric-adapter-ingress-pingora = { path = "adapters/ingress/pingora" }
+
+fabric-component-namespace = { path = "components/namespace" }
+fabric-component-publication = { path = "components/publication" }
+fabric-component-gateway = { path = "components/gateway" }

@@ -1,0 +1,20 @@
+[package]
+name = "fabric-adapter-ingress-pingora"
+version = "0.1.0"
+edition = "2024"
+publish = false
+
+[dependencies]
+async-trait = "0.1.89"
+http = "1.3.1"
+pingora = { version = "=0.8.1", default-features = false }
+fabric-resource-registry.workspace = true
+fabric-core.workspace = true
+fabric-resource-ingress.workspace = true
+fabric-resource-service.workspace = true
+thiserror = "2.0.20"
+tokio = { version = "1.53.0", features = ["sync"] }
+
+[dev-dependencies]
+tempfile = "3.23.0"
+ureq = { version = "3.1.2", features = ["json"] }

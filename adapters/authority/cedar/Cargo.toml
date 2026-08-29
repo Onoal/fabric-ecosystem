@@ -1,0 +1,13 @@
+[package]
+name = "fabric-adapter-authority-cedar"
+version = "0.1.0"
+edition = "2024"
+publish = false
+
+[dependencies]
+cedar-policy = "4.12.0"
+fabric-resource-authority.workspace = true
+
+[dev-dependencies]
+fabric-core.workspace = true
+tempfile = "3.23.0"
