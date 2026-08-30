@@ -24,6 +24,7 @@ members = [
     "tests/resource-foundation",
     "tests/fabric-vertical",
     "tests/service-materialization",
+    "tests/component-ecosystem",
 ]
 resolver = "2"
 
@@ -31,13 +32,13 @@ resolver = "2"
 edition = "2024"
 
 [workspace.dependencies]
-fabric-core = { git = "https://github.com/Onoal/fabric.git", rev = "48e731f6a6bb4f27dfcdc90fce5804e091945251" }
-fabric-host = { git = "https://github.com/Onoal/fabric.git", rev = "48e731f6a6bb4f27dfcdc90fce5804e091945251" }
-fabric-resource = { git = "https://github.com/Onoal/fabric.git", rev = "48e731f6a6bb4f27dfcdc90fce5804e091945251" }
-fabric-binding = { git = "https://github.com/Onoal/fabric.git", rev = "48e731f6a6bb4f27dfcdc90fce5804e091945251" }
-fabric-projection = { git = "https://github.com/Onoal/fabric.git", rev = "48e731f6a6bb4f27dfcdc90fce5804e091945251" }
-fabric-resource-registry = { git = "https://github.com/Onoal/fabric.git", rev = "48e731f6a6bb4f27dfcdc90fce5804e091945251" }
-fabric-component = { git = "https://github.com/Onoal/fabric.git", rev = "48e731f6a6bb4f27dfcdc90fce5804e091945251" }
+fabric-core = { git = "https://github.com/Onoal/fabric.git", rev = "32d087ebd59314fe48e346601c38a6b795debbf2" }
+fabric-host = { git = "https://github.com/Onoal/fabric.git", rev = "32d087ebd59314fe48e346601c38a6b795debbf2" }
+fabric-resource = { git = "https://github.com/Onoal/fabric.git", rev = "32d087ebd59314fe48e346601c38a6b795debbf2" }
+fabric-binding = { git = "https://github.com/Onoal/fabric.git", rev = "32d087ebd59314fe48e346601c38a6b795debbf2" }
+fabric-projection = { git = "https://github.com/Onoal/fabric.git", rev = "32d087ebd59314fe48e346601c38a6b795debbf2" }
+fabric-resource-registry = { git = "https://github.com/Onoal/fabric.git", rev = "32d087ebd59314fe48e346601c38a6b795debbf2" }
+fabric-component = { git = "https://github.com/Onoal/fabric.git", rev = "32d087ebd59314fe48e346601c38a6b795debbf2" }
 
 fabric-resource-identity = { path = "resources/identity" }
 fabric-resource-authority = { path = "resources/authority" }

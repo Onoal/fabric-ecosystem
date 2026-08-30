@@ -5,7 +5,7 @@ Fabric. These crates are ordinary Fabric ecosystem packages maintained by Onoal;
 they do not define Fabric Core and they have no privileged semantic status over
 third-party packages built on the same kernel.
 
-The repository currently carries three package groups:
+The repository currently carries four package and integration groups:
 
 - concrete Resources
 - concrete Adapters

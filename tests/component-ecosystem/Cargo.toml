@@ -1,0 +1,12 @@
+[package]
+name = "fabric-test-component-ecosystem"
+version = "0.1.0"
+edition = "2024"
+publish = false
+
+[dependencies]
+fabric-core.workspace = true
+fabric-component.workspace = true
+fabric-component-gateway.workspace = true
+fabric-component-namespace.workspace = true
+fabric-component-publication.workspace = true

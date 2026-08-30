@@ -7,7 +7,11 @@ fn manifest_depends_only_on_component_and_resource_seams() {
     let dependency_keys: Vec<&str> = manifest
         .lines()
         .filter_map(|line| line.split_once('='))
-        .map(|(name, _)| name.trim().split_once('.').map_or(name.trim(), |(base, _)| base))
+        .map(|(name, _)| {
+            name.trim()
+                .split_once('.')
+                .map_or(name.trim(), |(base, _)| base)
+        })
         .collect();
 
     for required in [

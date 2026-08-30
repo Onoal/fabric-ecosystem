@@ -923,7 +923,7 @@ dependencies = [
 [[package]]
 name = "fabric-binding"
 version = "0.1.0"
-source = "git+https://github.com/Onoal/fabric.git?rev=48e731f6a6bb4f27dfcdc90fce5804e091945251#48e731f6a6bb4f27dfcdc90fce5804e091945251"
+source = "git+https://github.com/Onoal/fabric.git?rev=32d087ebd59314fe48e346601c38a6b795debbf2#32d087ebd59314fe48e346601c38a6b795debbf2"
 dependencies = [
  "sha2",
  "thiserror 2.0.20",
@@ -932,7 +932,7 @@ dependencies = [
 [[package]]
 name = "fabric-component"
 version = "0.1.0"
-source = "git+https://github.com/Onoal/fabric.git?rev=48e731f6a6bb4f27dfcdc90fce5804e091945251#48e731f6a6bb4f27dfcdc90fce5804e091945251"
+source = "git+https://github.com/Onoal/fabric.git?rev=32d087ebd59314fe48e346601c38a6b795debbf2#32d087ebd59314fe48e346601c38a6b795debbf2"
 dependencies = [
  "fabric-core",
 ]
@@ -967,7 +967,7 @@ dependencies = [
 [[package]]
 name = "fabric-core"
 version = "0.1.0"
-source = "git+https://github.com/Onoal/fabric.git?rev=48e731f6a6bb4f27dfcdc90fce5804e091945251#48e731f6a6bb4f27dfcdc90fce5804e091945251"
+source = "git+https://github.com/Onoal/fabric.git?rev=32d087ebd59314fe48e346601c38a6b795debbf2#32d087ebd59314fe48e346601c38a6b795debbf2"
 dependencies = [
  "semver",
  "thiserror 2.0.20",
@@ -976,7 +976,7 @@ dependencies = [
 [[package]]
 name = "fabric-host"
 version = "0.1.0"
-source = "git+https://github.com/Onoal/fabric.git?rev=48e731f6a6bb4f27dfcdc90fce5804e091945251#48e731f6a6bb4f27dfcdc90fce5804e091945251"
+source = "git+https://github.com/Onoal/fabric.git?rev=32d087ebd59314fe48e346601c38a6b795debbf2#32d087ebd59314fe48e346601c38a6b795debbf2"
 dependencies = [
  "thiserror 2.0.20",
 ]
@@ -984,7 +984,7 @@ dependencies = [
 [[package]]
 name = "fabric-projection"
 version = "0.1.0"
-source = "git+https://github.com/Onoal/fabric.git?rev=48e731f6a6bb4f27dfcdc90fce5804e091945251#48e731f6a6bb4f27dfcdc90fce5804e091945251"
+source = "git+https://github.com/Onoal/fabric.git?rev=32d087ebd59314fe48e346601c38a6b795debbf2#32d087ebd59314fe48e346601c38a6b795debbf2"
 dependencies = [
  "fabric-core",
  "thiserror 2.0.20",
@@ -993,7 +993,7 @@ dependencies = [
 [[package]]
 name = "fabric-resource"
 version = "0.1.0"
-source = "git+https://github.com/Onoal/fabric.git?rev=48e731f6a6bb4f27dfcdc90fce5804e091945251#48e731f6a6bb4f27dfcdc90fce5804e091945251"
+source = "git+https://github.com/Onoal/fabric.git?rev=32d087ebd59314fe48e346601c38a6b795debbf2#32d087ebd59314fe48e346601c38a6b795debbf2"
 dependencies = [
  "semver",
  "sha2",
@@ -1098,7 +1098,7 @@ dependencies = [
 [[package]]
 name = "fabric-resource-registry"
 version = "0.1.0"
-source = "git+https://github.com/Onoal/fabric.git?rev=48e731f6a6bb4f27dfcdc90fce5804e091945251#48e731f6a6bb4f27dfcdc90fce5804e091945251"
+source = "git+https://github.com/Onoal/fabric.git?rev=32d087ebd59314fe48e346601c38a6b795debbf2#32d087ebd59314fe48e346601c38a6b795debbf2"
 dependencies = [
  "fabric-core",
  "fabric-resource",
@@ -1179,6 +1179,17 @@ dependencies = [
  "thiserror 2.0.20",
  "tokio",
  "ureq",
+]
+
+[[package]]
+name = "fabric-test-component-ecosystem"
+version = "0.1.0"
+dependencies = [
+ "fabric-component",
+ "fabric-component-gateway",
+ "fabric-component-namespace",
+ "fabric-component-publication",
+ "fabric-core",
 ]
 
 [[package]]
