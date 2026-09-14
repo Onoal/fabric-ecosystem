@@ -1,0 +1,13 @@
+[package]
+name = "fabric-package-key-value-consumer-test"
+version = "0.1.0"
+edition.workspace = true
+publish = false
+
+[dependencies]
+fabric-sdk = { git = "https://github.com/Onoal/fabric.git", rev = "e44aa2d17d12d6968cf4b418d1b67acd04d94d41" }
+fabric-component = { git = "https://github.com/Onoal/fabric.git", rev = "e44aa2d17d12d6968cf4b418d1b67acd04d94d41" }
+fabric-core = { git = "https://github.com/Onoal/fabric.git", rev = "e44aa2d17d12d6968cf4b418d1b67acd04d94d41" }
+fabric-resource-key-value = { path = "../../packages/resource-key-value" }
+fabric-adapter-key-value-memory = { path = "../../adapters/key-value-memory" }
+fabric-adapter-key-value-filesystem = { path = "../../adapters/key-value-filesystem" }

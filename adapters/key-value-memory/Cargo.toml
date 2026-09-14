@@ -1,0 +1,10 @@
+[package]
+name = "fabric-adapter-key-value-memory"
+version = "0.1.0"
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+description = "In-memory KeyValueStore Fabric adapter"
+[dependencies]
+fabric-sdk = { git = "https://github.com/Onoal/fabric.git", rev = "e44aa2d17d12d6968cf4b418d1b67acd04d94d41" }
+fabric-resource-key-value = { path = "../../packages/resource-key-value" }
