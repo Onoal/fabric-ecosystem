@@ -15,7 +15,12 @@ mod tests {
     use fabric_resource_key_value::{KeyValueError, KeyValueStore, KeyValueStoreConfig};
     use fabric_sdk::prelude::*;
 
-    type Observation = Result<Option<Vec<u8>>, KeyValueError>;
+    #[derive(Clone, Debug, PartialEq, Eq)]
+    enum Observation {
+        Get(Result<Option<Vec<u8>>, KeyValueError>),
+        Put(Result<(), KeyValueError>),
+        Delete(Result<(), KeyValueError>),
+    }
 
     struct KeyValueProbe;
     #[derive(Clone)]
@@ -40,13 +45,19 @@ mod tests {
                     let store = scope.resource(&Requires::<KeyValueStore>::versioned(
                         ContractVersionRequirement::parse("^1").expect("requirement"),
                     ))?;
-                    store
-                        .put(b"alpha".to_vec(), b"one".to_vec())
-                        .map_err(|_| fabric_component::ComponentError::Unavailable)?;
-                    capture
-                        .lock()
-                        .expect("capture")
-                        .push(store.get(b"alpha".to_vec()));
+                    let mut observations = capture.lock().expect("capture");
+                    observations.push(Observation::Get(store.get(b"alpha".to_vec())));
+                    observations.push(Observation::Put(
+                        store.put(b"alpha".to_vec(), b"one".to_vec()),
+                    ));
+                    observations.push(Observation::Get(store.get(b"alpha".to_vec())));
+                    observations.push(Observation::Put(
+                        store.put(b"alpha".to_vec(), b"two".to_vec()),
+                    ));
+                    observations.push(Observation::Get(store.get(b"alpha".to_vec())));
+                    observations.push(Observation::Delete(store.delete(b"alpha".to_vec())));
+                    observations.push(Observation::Get(store.get(b"alpha".to_vec())));
+                    observations.push(Observation::Get(store.get(Vec::new())));
                     Ok(Health::Healthy)
                 },
             ))
@@ -108,12 +119,7 @@ mod tests {
         ))
     }
 
-    fn run_with<A>(
-        adapter: A,
-    ) -> (
-        fabric_sdk::FabricManifest,
-        Result<Option<Vec<u8>>, KeyValueError>,
-    )
+    fn run_with<A>(adapter: A) -> (fabric_sdk::FabricManifest, Vec<Observation>)
     where
         A: AdapterDefinition<
                 Target = KeyValueStore,
@@ -165,11 +171,7 @@ mod tests {
             .expect("bound materializer")
             .materialize(&KeyValueProbe::component_id())
             .expect("component");
-        let result = capture
-            .lock()
-            .expect("capture")
-            .pop()
-            .expect("component observation");
+        let result = capture.lock().expect("capture").clone();
         instance.stop();
         (built.manifest().clone(), result)
     }
@@ -177,18 +179,45 @@ mod tests {
     #[test]
     fn memory_and_filesystem_adapters_are_public_realizations() {
         let root = temporary_root("filesystem");
-        let (_, memory) = run_with(memory_adapter());
-        assert_eq!(memory.expect("memory result"), Some(b"one".to_vec()));
-        let (_, filesystem) = run_with(FilesystemKeyValueAdapter::new(
+        let (memory_manifest, memory) = run_with(memory_adapter());
+        let (filesystem_manifest, filesystem) = run_with(FilesystemKeyValueAdapter::new(
             FilesystemKeyValueAdapterConfig {
                 root: root.clone(),
                 layout: FileLayout::Sharded { depth: 1 },
                 fsync: true,
             },
         ));
+        let expected = vec![
+            Observation::Get(Ok(None)),
+            Observation::Put(Ok(())),
+            Observation::Get(Ok(Some(b"one".to_vec()))),
+            Observation::Put(Ok(())),
+            Observation::Get(Ok(Some(b"two".to_vec()))),
+            Observation::Delete(Ok(())),
+            Observation::Get(Ok(None)),
+            Observation::Get(Err(KeyValueError::InvalidKey)),
+        ];
+        assert_eq!(memory, expected);
+        assert_eq!(filesystem, expected);
         assert_eq!(
-            filesystem.expect("filesystem result"),
-            Some(b"one".to_vec())
+            memory_manifest.resources()[0].resource_id(),
+            filesystem_manifest.resources()[0].resource_id()
+        );
+        assert_eq!(
+            memory_manifest.resources()[0].name(),
+            filesystem_manifest.resources()[0].name()
+        );
+        assert_eq!(
+            memory_manifest.components()[0].component_id(),
+            filesystem_manifest.components()[0].component_id()
+        );
+        assert_eq!(
+            memory_manifest.components()[0].resource_requirements(),
+            filesystem_manifest.components()[0].resource_requirements()
+        );
+        assert_eq!(
+            memory_manifest.provider_selections(),
+            filesystem_manifest.provider_selections()
         );
         let _ = fs::remove_dir_all(root);
     }
@@ -208,5 +237,16 @@ mod tests {
         let primary = KeyValueStore::select("primary", KeyValueStoreConfig {}).expect("primary");
         let cache = KeyValueStore::select("cache", KeyValueStoreConfig {}).expect("cache");
         assert_ne!(primary.module_id(), cache.module_id());
+        let built = Fabric::new("key-value.occurrences")
+            .expect("fabric")
+            .resource(primary.using(memory_adapter()).expect("primary adapter"))
+            .resource(cache.using(memory_adapter()).expect("cache adapter"))
+            .build()
+            .expect("build");
+        assert_eq!(built.manifest().resources().len(), 2);
+        assert_ne!(
+            built.manifest().resources()[0].name(),
+            built.manifest().resources()[1].name()
+        );
     }
 }
