@@ -6,5 +6,5 @@ license.workspace = true
 repository.workspace = true
 description = "In-memory KeyValueStore Fabric adapter"
 [dependencies]
-fabric-sdk = { git = "https://github.com/Onoal/fabric.git", rev = "e44aa2d17d12d6968cf4b418d1b67acd04d94d41" }
+fabric-sdk = { git = "https://github.com/Onoal/fabric.git", rev = "1410010c04d08d3bdff71c2e87af6a68f08510a0" }
 fabric-resource-key-value = { path = "../../packages/resource-key-value" }
