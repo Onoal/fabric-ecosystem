@@ -8,5 +8,5 @@ repository = "https://github.com/Onoal/fabric-packages"
 readme = "README.md"
 
 [dependencies]
-fabric = { package = "onoal-fabric", version = "0.1.1" }
+fabric = { package = "onoal-fabric", version = "0.3.0" }
 thiserror = "2"
