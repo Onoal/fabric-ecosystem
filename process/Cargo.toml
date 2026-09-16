@@ -1,0 +1,12 @@
+[package]
+name = "onoal-fabric-process"
+version = "0.1.0"
+edition = "2024"
+license = "MIT OR Apache-2.0"
+description = "Reusable local operating-system process capability for Fabric compositions."
+repository = "https://github.com/Onoal/fabric-packages"
+readme = "README.md"
+
+[dependencies]
+fabric = { package = "onoal-fabric", version = "0.1.1" }
+thiserror = "2"

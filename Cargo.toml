@@ -1,0 +1,7 @@
+[workspace]
+members = [
+    "process",
+    "verification/process-consumer",
+]
+resolver = "2"
+

@@ -1,0 +1,11 @@
+[package]
+name = "onoal-fabric-process-consumer"
+version = "0.1.0"
+edition = "2024"
+publish = false
+
+[dependencies]
+fabric = { package = "onoal-fabric", version = "0.1.1" }
+onoal-fabric-process = { path = "../../process" }
+tempfile = "3"
+
