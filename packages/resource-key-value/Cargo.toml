@@ -1,0 +1,10 @@
+[package]
+name = "onoal-fabric-resource-key-value"
+version = "0.1.0"
+edition = "2024"
+license = "MIT OR Apache-2.0"
+description = "The semantic KeyValue Resource for Fabric compositions."
+repository = "https://github.com/Onoal/fabric-packages"
+
+[dependencies]
+fabric = { package = "onoal-fabric", version = "0.3.0" }

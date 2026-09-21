@@ -1,0 +1,13 @@
+[package]
+name = "onoal-fabric-key-value-consumer"
+version = "0.1.0"
+edition = "2024"
+publish = false
+
+[dependencies]
+fabric = { package = "onoal-fabric", version = "0.3.0" }
+onoal-fabric-resource-key-value = { path = "../../packages/resource-key-value" }
+onoal-fabric-adapter-key-value-memory = { path = "../../adapters/key-value-memory" }
+onoal-fabric-adapter-key-value-filesystem = { path = "../../adapters/key-value-filesystem" }
+futures = "0.3"
+tempfile = "3"

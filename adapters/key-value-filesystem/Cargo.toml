@@ -1,0 +1,11 @@
+[package]
+name = "onoal-fabric-adapter-key-value-filesystem"
+version = "0.1.0"
+edition = "2024"
+license = "MIT OR Apache-2.0"
+description = "A filesystem realization of the Fabric KeyValue Resource."
+repository = "https://github.com/Onoal/fabric-packages"
+
+[dependencies]
+fabric = { package = "onoal-fabric", version = "0.3.0" }
+onoal-fabric-resource-key-value = { path = "../../packages/resource-key-value" }
