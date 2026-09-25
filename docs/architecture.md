@@ -20,6 +20,24 @@ This repository deliberately avoids kind-based folders such as `resources/` or
 `adapters/`. Those folders would make implementation machinery look more
 important than capability ownership.
 
+## Reserved Capability Pressure
+
+The first foundation is intentionally breadth-first, not exhaustive.
+
+- Network and transport packages should own real connectivity capabilities,
+  not merely wrap process execution or key-value state.
+- Messaging packages should model delivery semantics, queues, streams, or
+  routing as their own capability family when real behavior exists.
+- Security and crypto packages should expose concrete cryptographic or
+  authorization capabilities without borrowing identity concepts from other
+  Onoal systems.
+- Observability packages should own telemetry, metrics, traces, or audit
+  behavior when those capabilities are implemented as real Fabric definitions
+  and contributions.
+
+None of these reserved families should appear as empty crates. A package family
+is introduced only when it contains useful Fabric authoring.
+
 ## Fabric Boundary
 
 Fabric 0.7 remains unchanged. Package helpers use public Fabric APIs:
