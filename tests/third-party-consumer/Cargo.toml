@@ -1,5 +1,5 @@
 [package]
-name = "fabric-packages-third-party-consumer"
+name = "fabric-ecosystem-third-party-consumer"
 version = "0.1.0"
 edition = "2021"
 publish = false

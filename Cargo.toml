@@ -1,9 +1,10 @@
 [workspace]
 members = [
-    "data/key-value",
-    "execution/process-runtime",
-    "messaging/queue",
-    "networking/tcp",
+    "examples/key-value-quickstart",
+    "packages/data/key-value",
+    "packages/execution/process-runtime",
+    "packages/messaging/queue",
+    "packages/networking/tcp",
     "tests/third-party-consumer",
 ]
 resolver = "2"
@@ -11,13 +12,13 @@ resolver = "2"
 [workspace.package]
 edition = "2021"
 license = "MIT OR Apache-2.0"
-repository = "https://github.com/Onoal/fabric-packages"
+repository = "https://github.com/Onoal/fabric-ecosystem"
 version = "0.1.0"
 
 [workspace.dependencies]
 fabric = { package = "onoal-fabric", git = "https://github.com/Onoal/fabric.git", rev = "ac43a1b3353990995ac7a7e1803a3da9cd4d24d0" }
-fabric-package-key-value = { package = "onoal-fabric-package-key-value", version = "0.1.0", path = "data/key-value" }
-fabric-package-messaging-queue = { package = "onoal-fabric-package-messaging-queue", version = "0.1.0", path = "messaging/queue" }
-fabric-package-networking-tcp = { package = "onoal-fabric-package-networking-tcp", version = "0.1.0", path = "networking/tcp" }
-fabric-package-process-runtime = { package = "onoal-fabric-package-process-runtime", version = "0.1.0", path = "execution/process-runtime" }
+fabric-package-key-value = { package = "onoal-fabric-package-key-value", version = "0.1.0", path = "packages/data/key-value" }
+fabric-package-messaging-queue = { package = "onoal-fabric-package-messaging-queue", version = "0.1.0", path = "packages/messaging/queue" }
+fabric-package-networking-tcp = { package = "onoal-fabric-package-networking-tcp", version = "0.1.0", path = "packages/networking/tcp" }
+fabric-package-process-runtime = { package = "onoal-fabric-package-process-runtime", version = "0.1.0", path = "packages/execution/process-runtime" }
 futures = "0.3"

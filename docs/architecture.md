@@ -1,4 +1,44 @@
-# Fabric Package Architecture
+# Fabric Ecosystem Architecture
+
+Fabric Ecosystem is the source home for shareable artifacts built with Fabric:
+Packages, Compositions, and Examples.
+
+```text
+FABRIC CORE
+    structural construction machinery
+        |
+        v
+FABRIC
+    semantic systems-construction world
+        |
+        v
+PACKAGES
+    reusable building material
+        |
+        v
+COMPOSITIONS
+    reusable assembled systems
+
+EXAMPLES
+    demonstrate any or all layers
+```
+
+These repository families are source ownership categories. They are not new
+Fabric semantic primitives.
+
+## Artifact Law
+
+- Package = reusable building material.
+- Composition artifact = reusable assembled system.
+- Example = teaching or demonstration artifact.
+
+Package != Composition. Composition != Example. Example != Package.
+
+None of these repository artifact kinds introduces `PackageId`,
+`CompositionArtifactId`, `ExampleId`, `EcosystemArtifact`, or
+`EcosystemRuntime`.
+
+## Packages
 
 Fabric packages are reusable Rust crates that publish ordinary Fabric
 definitions and contribution helpers.
@@ -9,21 +49,22 @@ authoring the resulting `Composition` contains only Fabric semantic truth:
 resources, systems, components, relations, realizations, augmentations, and
 live instance observations.
 
-## Topology
+### Topology
 
 Packages are grouped by capability ownership:
 
-- `data/key-value` owns the KeyValue capability.
-- `execution/process-runtime` owns local process execution.
-- `messaging/queue` owns the first messaging capability: a bounded FIFO queue.
-- `networking/tcp` owns the first network/transport capability: loopback TCP
-  byte streams.
+- `packages/data/key-value` owns the KeyValue capability.
+- `packages/execution/process-runtime` owns local process execution.
+- `packages/messaging/queue` owns the first messaging capability: a bounded
+  FIFO queue.
+- `packages/networking/tcp` owns the first network/transport capability:
+  loopback TCP byte streams.
 
 This repository deliberately avoids kind-based folders such as `resources/` or
 `adapters/`. Those folders would make implementation machinery look more
 important than capability ownership.
 
-## Reserved Capability Pressure
+### Reserved Capability Pressure
 
 The foundation is intentionally breadth-first, not exhaustive.
 
@@ -39,11 +80,11 @@ The foundation is intentionally breadth-first, not exhaustive.
 None of these reserved families should appear as empty crates. A package family
 is introduced only when it contains useful Fabric authoring.
 
-## Messaging Queue
+### Messaging Queue
 
-`messaging/queue` establishes the first real messaging capability. The semantic
-definition is `FifoQueue`, a named Resource occurrence representing one queue.
-No System is required for the first local model because there is no
+`packages/messaging/queue` establishes the first real messaging capability. The
+semantic definition is `FifoQueue`, a named Resource occurrence representing one
+queue. No System is required for the first local model because there is no
 instance-wide broker/environment truth beyond the named queue occurrence.
 
 Delivery semantics are intentionally small and explicit:
@@ -66,13 +107,13 @@ not become owner of remote canonical state. OXP remains transport/exchange
 machinery, Oracle remains planning/control, and Origin/Identis identity or
 authority concepts are not mandatory messaging primitives.
 
-## TCP Byte-Stream Transport
+### TCP Byte-Stream Transport
 
-`networking/tcp` establishes the first real external I/O capability. The
-semantic definition is `TcpByteStreamTransport`, a named Resource occurrence
-representing one TCP byte-stream listener/connector capability. TCP is the
-semantic contract for this first package; the local loopback implementation is
-the Adapter realization.
+`packages/networking/tcp` establishes the first real external I/O capability.
+The semantic definition is `TcpByteStreamTransport`, a named Resource
+occurrence representing one TCP byte-stream listener/connector capability. TCP
+is the semantic contract for this first package; the local loopback
+implementation is the Adapter realization.
 
 The model is intentionally technical and bounded:
 
@@ -101,6 +142,47 @@ TCP model avoids `Exchange` vocabulary. A future OXP adapter may use this kind
 of transport, but transport bytes are not OXP exchange semantics. TLS,
 certificates, DNS, hostnames, URI/Locator models, and remote identity/authority
 remain future separate capability pressure.
+
+## Compositions
+
+`compositions/` is for shareable source artifacts that assemble coherent Fabric
+systems. Fabric already has `fabric::Composition`; the repository family means
+source that constructs ordinary Fabric Composition truth.
+
+A reusable Composition artifact should represent something with assembly value:
+a complete HTTP server, storage server, compute server, worker system, local
+development stack, or another coherent assembled system.
+
+A Composition may consume Packages, but Composition != bundle of Packages. It
+may contain package-provided definitions, project-specific definitions, custom
+Components, custom config, explicit relations, and ordinary Fabric authoring.
+Its defining property is coherent assembled system truth.
+
+Illustrative future classification:
+
+- `packages/networking/tcp`: reusable TCP capability.
+- `packages/networking/http`: possible future reusable HTTP protocol
+  capability if earned.
+- `compositions/servers/http-server`: possible future complete HTTP-serving
+  system.
+- `packages/data/...`: reusable storage/data capabilities.
+- `compositions/servers/storage-server`: possible future assembled
+  storage-serving system.
+- `packages/execution/...`: reusable execution/compute capabilities.
+- `compositions/servers/compute-server`: possible future assembled compute
+  serving system.
+
+These are examples, not implemented artifacts. A `servers/` taxonomy would be a
+repository taxonomy, not a Fabric `Server` semantic primitive.
+
+## Examples
+
+`examples/` contains pedagogical artifacts. An Example may demonstrate raw
+Fabric, one Package, multiple Packages, a reusable Composition, lifecycle, or
+Instance behavior. Example ownership is teaching ownership, not semantic
+ownership.
+
+Compatibility and integration fixtures remain under `tests/`.
 
 ## Fabric Boundary
 

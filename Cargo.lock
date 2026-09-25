@@ -53,7 +53,16 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "877a4ace8713b0bcf2a4e7eec82529c029f1d0619886d18145fea96c3ffe5c0f"
 
 [[package]]
-name = "fabric-packages-third-party-consumer"
+name = "fabric-ecosystem-example-key-value-quickstart"
+version = "0.1.0"
+dependencies = [
+ "futures",
+ "onoal-fabric",
+ "onoal-fabric-package-key-value",
+]
+
+[[package]]
+name = "fabric-ecosystem-third-party-consumer"
 version = "0.1.0"
 dependencies = [
  "futures",
