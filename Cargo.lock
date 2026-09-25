@@ -59,6 +59,7 @@ dependencies = [
  "futures",
  "onoal-fabric",
  "onoal-fabric-package-key-value",
+ "onoal-fabric-package-messaging-queue",
  "onoal-fabric-package-process-runtime",
 ]
 
@@ -232,6 +233,14 @@ dependencies = [
 
 [[package]]
 name = "onoal-fabric-package-key-value"
+version = "0.1.0"
+dependencies = [
+ "futures",
+ "onoal-fabric",
+]
+
+[[package]]
+name = "onoal-fabric-package-messaging-queue"
 version = "0.1.0"
 dependencies = [
  "futures",

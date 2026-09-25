@@ -13,6 +13,8 @@ The first package families are:
   adapter and reusable authoring contributions.
 - `execution/process-runtime`: a local process execution capability with a
   real OS-process adapter, execution environment system, and component witness.
+- `messaging/queue`: a bounded non-durable FIFO queue capability with
+  in-memory live state and producer/consumer component witnesses.
 
 Packages expose ordinary Rust functions returning Fabric contributions, so a
 consumer writes normal Fabric authoring:

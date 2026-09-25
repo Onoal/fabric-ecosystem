@@ -1,0 +1,17 @@
+[package]
+name = "onoal-fabric-package-messaging-queue"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+description = "FIFO queue messaging capability package for Fabric"
+
+[lib]
+name = "fabric_package_messaging_queue"
+path = "src/lib.rs"
+
+[dependencies]
+fabric.workspace = true
+
+[dev-dependencies]
+futures.workspace = true

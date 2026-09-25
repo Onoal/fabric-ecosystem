@@ -2,6 +2,7 @@
 
 use fabric::prelude::*;
 use fabric_package_key_value::KeyValue;
+use fabric_package_messaging_queue::{FifoQueue, QueueMessage, QueueSendResult};
 use fabric_package_process_runtime::{ExecutionEnvironment, ProcessOutput, ProcessRuntime};
 
 #[derive(Clone, Debug, PartialEq, Eq)]
@@ -9,6 +10,8 @@ pub struct ConsumerOutput {
     pub stored: Option<Vec<u8>>,
     pub process: ProcessOutput,
     pub environment: ExecutionEnvironment,
+    pub message_send: QueueSendResult,
+    pub message: Option<QueueMessage>,
 }
 
 fabric::component! {
@@ -19,6 +22,7 @@ fabric::component! {
             requires {
                 store: KeyValue;
                 process: ProcessRuntime;
+                queue: FifoQueue;
                 environment: fabric_package_process_runtime::LocalExecutionEnvironment;
             }
         }
@@ -37,10 +41,17 @@ fabric::component! {
                     "sh".to_owned(),
                     vec!["-c".to_owned(), "printf third-party".to_owned()],
                 );
+                let message_send = self
+                    .relations()
+                    .queue
+                    .send(b"third-party-message".to_vec());
+                let message = self.relations().queue.try_receive();
                 ConsumerOutput {
                     stored,
                     process,
                     environment: self.relations().environment.describe(),
+                    message_send,
+                    message,
                 }
             }
         }
@@ -50,6 +61,7 @@ fabric::component! {
 pub fn application() -> impl IntoFabricContribution {
     let store = KeyValue::select("primary").expect("store selection");
     let process = ProcessRuntime::select("local").expect("process selection");
+    let queue = FifoQueue::select("events").expect("queue selection");
     let component = PackageConsumer::define()
         .select_named_resource_provider(
             &fabric::authoring::ComponentResourceRequirement::new(
@@ -64,6 +76,13 @@ pub fn application() -> impl IntoFabricContribution {
                 fabric::authoring::Requires::<ProcessRuntime>::provisional(),
             ),
             &process,
+        )
+        .select_named_resource_provider(
+            &fabric::authoring::ComponentResourceRequirement::new(
+                fabric::component::ComponentRelationName::new("queue").expect("role"),
+                fabric::authoring::Requires::<FifoQueue>::provisional(),
+            ),
+            &queue,
         );
 
     FabricContribution::new().component(component)
@@ -85,11 +104,12 @@ mod tests {
             .with(fabric_package_process_runtime::local_process_runtime(
                 "local",
             ))
+            .with(fabric_package_messaging_queue::memory_queue("events", 4))
             .with(application())
             .build()
             .expect("composition");
 
-        assert_eq!(composition.resources().count(), 2);
+        assert_eq!(composition.resources().count(), 3);
         assert_eq!(composition.systems().count(), 1);
         assert_eq!(composition.components().count(), 1);
         assert_eq!(
@@ -109,6 +129,10 @@ mod tests {
             .relations()
             .iter()
             .any(|relation| relation.role().as_str() == "process"));
+        assert!(composition
+            .relations()
+            .iter()
+            .any(|relation| relation.role().as_str() == "queue"));
 
         let mut instance = composition
             .materialize_on(
@@ -126,5 +150,12 @@ mod tests {
         assert!(output.process.success());
         assert_eq!(output.process.stdout_utf8(), "third-party");
         assert!(!output.environment.os.is_empty());
+        assert_eq!(output.message_send, QueueSendResult::Accepted);
+        assert_eq!(
+            output.message,
+            Some(QueueMessage {
+                payload: b"third-party-message".to_vec()
+            })
+        );
     }
 }
