@@ -1,0 +1,17 @@
+[package]
+name = "onoal-fabric-package-key-value"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+description = "KeyValue capability package for Fabric"
+
+[lib]
+name = "fabric_package_key_value"
+path = "src/lib.rs"
+
+[dependencies]
+fabric.workspace = true
+
+[dev-dependencies]
+futures.workspace = true
