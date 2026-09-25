@@ -8,5 +8,6 @@ publish = false
 fabric.workspace = true
 fabric-package-key-value.workspace = true
 fabric-package-messaging-queue.workspace = true
+fabric-package-networking-tcp.workspace = true
 fabric-package-process-runtime.workspace = true
 futures.workspace = true

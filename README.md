@@ -15,6 +15,8 @@ The first package families are:
   real OS-process adapter, execution environment system, and component witness.
 - `messaging/queue`: a bounded non-durable FIFO queue capability with
   in-memory live state and producer/consumer component witnesses.
+- `networking/tcp`: a loopback TCP byte-stream transport capability with real
+  OS bind/connect/read/write behavior and Component probes.
 
 Packages expose ordinary Rust functions returning Fabric contributions, so a
 consumer writes normal Fabric authoring:

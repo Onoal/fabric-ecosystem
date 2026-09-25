@@ -3,6 +3,9 @@
 use fabric::prelude::*;
 use fabric_package_key_value::KeyValue;
 use fabric_package_messaging_queue::{FifoQueue, QueueMessage, QueueSendResult};
+use fabric_package_networking_tcp::{
+    TcpByteStreamTransport, TcpExchangeResult, TcpProbeObservation,
+};
 use fabric_package_process_runtime::{ExecutionEnvironment, ProcessOutput, ProcessRuntime};
 
 #[derive(Clone, Debug, PartialEq, Eq)]
@@ -12,6 +15,8 @@ pub struct ConsumerOutput {
     pub environment: ExecutionEnvironment,
     pub message_send: QueueSendResult,
     pub message: Option<QueueMessage>,
+    pub transport_observation: TcpProbeObservation,
+    pub transport_exchange: TcpExchangeResult,
 }
 
 fabric::component! {
@@ -23,6 +28,7 @@ fabric::component! {
                 store: KeyValue;
                 process: ProcessRuntime;
                 queue: FifoQueue;
+                transport: TcpByteStreamTransport;
                 environment: fabric_package_process_runtime::LocalExecutionEnvironment;
             }
         }
@@ -46,12 +52,23 @@ fabric::component! {
                     .queue
                     .send(b"third-party-message".to_vec());
                 let message = self.relations().queue.try_receive();
+                let transport_observation = TcpProbeObservation {
+                    requested: self.relations().transport.requested_bind_address(),
+                    actual: self.relations().transport.actual_bound_address(),
+                    accepted_connections: self.relations().transport.accepted_connections(),
+                };
+                let transport_exchange = self
+                    .relations()
+                    .transport
+                    .exchange(b"third-party-tcp".to_vec());
                 ConsumerOutput {
                     stored,
                     process,
                     environment: self.relations().environment.describe(),
                     message_send,
                     message,
+                    transport_observation,
+                    transport_exchange,
                 }
             }
         }
@@ -62,6 +79,7 @@ pub fn application() -> impl IntoFabricContribution {
     let store = KeyValue::select("primary").expect("store selection");
     let process = ProcessRuntime::select("local").expect("process selection");
     let queue = FifoQueue::select("events").expect("queue selection");
+    let transport = TcpByteStreamTransport::select("api").expect("transport selection");
     let component = PackageConsumer::define()
         .select_named_resource_provider(
             &fabric::authoring::ComponentResourceRequirement::new(
@@ -83,6 +101,13 @@ pub fn application() -> impl IntoFabricContribution {
                 fabric::authoring::Requires::<FifoQueue>::provisional(),
             ),
             &queue,
+        )
+        .select_named_resource_provider(
+            &fabric::authoring::ComponentResourceRequirement::new(
+                fabric::component::ComponentRelationName::new("transport").expect("role"),
+                fabric::authoring::Requires::<TcpByteStreamTransport>::provisional(),
+            ),
+            &transport,
         );
 
     FabricContribution::new().component(component)
@@ -105,11 +130,12 @@ mod tests {
                 "local",
             ))
             .with(fabric_package_messaging_queue::memory_queue("events", 4))
+            .with(fabric_package_networking_tcp::loopback_tcp_transport("api"))
             .with(application())
             .build()
             .expect("composition");
 
-        assert_eq!(composition.resources().count(), 3);
+        assert_eq!(composition.resources().count(), 4);
         assert_eq!(composition.systems().count(), 1);
         assert_eq!(composition.components().count(), 1);
         assert_eq!(
@@ -133,6 +159,10 @@ mod tests {
             .relations()
             .iter()
             .any(|relation| relation.role().as_str() == "queue"));
+        assert!(composition
+            .relations()
+            .iter()
+            .any(|relation| relation.role().as_str() == "transport"));
 
         let mut instance = composition
             .materialize_on(
@@ -156,6 +186,15 @@ mod tests {
             Some(QueueMessage {
                 payload: b"third-party-message".to_vec()
             })
+        );
+        assert!(output.transport_observation.actual.is_some());
+        assert!(matches!(
+            output.transport_exchange,
+            TcpExchangeResult::Connected(_)
+        ));
+        assert_eq!(
+            output.transport_exchange.received(),
+            Some(b"third-party-tcp".as_slice())
         );
     }
 }

@@ -16,6 +16,8 @@ Packages are grouped by capability ownership:
 - `data/key-value` owns the KeyValue capability.
 - `execution/process-runtime` owns local process execution.
 - `messaging/queue` owns the first messaging capability: a bounded FIFO queue.
+- `networking/tcp` owns the first network/transport capability: loopback TCP
+  byte streams.
 
 This repository deliberately avoids kind-based folders such as `resources/` or
 `adapters/`. Those folders would make implementation machinery look more
@@ -63,6 +65,34 @@ as NATS, Redis Streams, Kafka, AMQP, or an OXP-backed transport, but Fabric does
 not become owner of remote canonical state. OXP remains transport/exchange
 machinery, Oracle remains planning/control, and Origin/Identis identity or
 authority concepts are not mandatory messaging primitives.
+
+## TCP Byte-Stream Transport
+
+`networking/tcp` establishes the first real external I/O capability. The
+semantic definition is `TcpByteStreamTransport`, a named Resource occurrence
+representing one TCP byte-stream listener/connector capability. TCP is the
+semantic contract for this first package; the local loopback implementation is
+the Adapter realization.
+
+The model is intentionally technical and bounded:
+
+- It uses explicit socket addresses, normally `127.0.0.1:0` in tests.
+- The requested bind address is adapter configuration.
+- The actual bound address and port are live runtime truth, available only
+  after materialization/start through the package API.
+- Connections are runtime values/observations, not Fabric Resources,
+  Components, Systems, or identities.
+- The contract is byte-oriented. It does not define messages, frames, RPC,
+  HTTP, JSON, or FIFO delivery.
+- The loopback adapter owns a background accept loop internally and releases it
+  during synchronous Fabric `stop`.
+- Health describes local transport machinery, not remote peer health.
+
+This package deliberately does not create OXP concepts such as Endpoint, Lane,
+Locator, Path, Session, Exchange, Policy, Observation, or Protocol. A future OXP
+adapter may use this kind of transport, but transport bytes are not OXP
+exchange semantics. TLS, certificates, DNS, hostnames, URI/Locator models, and
+remote identity/authority remain future separate capability pressure.
 
 ## Fabric Boundary
 

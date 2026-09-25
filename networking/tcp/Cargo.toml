@@ -1,0 +1,17 @@
+[package]
+name = "onoal-fabric-package-networking-tcp"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+description = "TCP byte-stream transport capability package for Fabric"
+
+[lib]
+name = "fabric_package_networking_tcp"
+path = "src/lib.rs"
+
+[dependencies]
+fabric.workspace = true
+
+[dev-dependencies]
+futures.workspace = true
