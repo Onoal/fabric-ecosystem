@@ -80,19 +80,27 @@ The model is intentionally technical and bounded:
 - The requested bind address is adapter configuration.
 - The actual bound address and port are live runtime truth, available only
   after materialization/start through the package API.
-- Connections are runtime values/observations, not Fabric Resources,
+- Connections are runtime values, not Fabric Resources,
   Components, Systems, or identities.
 - The contract is byte-oriented. It does not define messages, frames, RPC,
   HTTP, JSON, or FIFO delivery.
-- The loopback adapter owns a background accept loop internally and releases it
-  during synchronous Fabric `stop`.
+- The loopback adapter owns socket bind/listen/connect/accept mechanics and
+  accepted-connection delivery. It does not own echo or request/response
+  behavior.
+- A connection exposes bounded read, write, and shutdown operations as live
+  runtime value behavior.
+- Behavioral Components or applications may implement echo on top of the
+  transport by accepting a connection, reading bytes, and writing bytes.
+- The adapter owns a background accept loop internally and releases it during
+  synchronous Fabric `stop`.
 - Health describes local transport machinery, not remote peer health.
 
 This package deliberately does not create OXP concepts such as Endpoint, Lane,
-Locator, Path, Session, Exchange, Policy, Observation, or Protocol. A future OXP
-adapter may use this kind of transport, but transport bytes are not OXP
-exchange semantics. TLS, certificates, DNS, hostnames, URI/Locator models, and
-remote identity/authority remain future separate capability pressure.
+Locator, Path, Session, Exchange, Policy, Observation, or Protocol. Its public
+TCP model avoids `Exchange` vocabulary. A future OXP adapter may use this kind
+of transport, but transport bytes are not OXP exchange semantics. TLS,
+certificates, DNS, hostnames, URI/Locator models, and remote identity/authority
+remain future separate capability pressure.
 
 ## Fabric Boundary
 

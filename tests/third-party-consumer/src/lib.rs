@@ -4,7 +4,7 @@ use fabric::prelude::*;
 use fabric_package_key_value::KeyValue;
 use fabric_package_messaging_queue::{FifoQueue, QueueMessage, QueueSendResult};
 use fabric_package_networking_tcp::{
-    TcpByteStreamTransport, TcpExchangeResult, TcpProbeObservation,
+    TcpByteStreamTransport, TcpConnectResult, TcpProbeObservation, TcpTransportError,
 };
 use fabric_package_process_runtime::{ExecutionEnvironment, ProcessOutput, ProcessRuntime};
 
@@ -16,7 +16,7 @@ pub struct ConsumerOutput {
     pub message_send: QueueSendResult,
     pub message: Option<QueueMessage>,
     pub transport_observation: TcpProbeObservation,
-    pub transport_exchange: TcpExchangeResult,
+    pub transport_connect: Result<(), TcpTransportError>,
 }
 
 fabric::component! {
@@ -57,10 +57,16 @@ fabric::component! {
                     actual: self.relations().transport.actual_bound_address(),
                     accepted_connections: self.relations().transport.accepted_connections(),
                 };
-                let transport_exchange = self
-                    .relations()
-                    .transport
-                    .exchange(b"third-party-tcp".to_vec());
+                let transport_connect = match transport_observation.actual.clone() {
+                    Some(address) => match self.relations().transport.connect(address) {
+                        TcpConnectResult::Connected(connection) => connection.shutdown_both(),
+                        TcpConnectResult::Failed(error) => Err(error),
+                    },
+                    None => Err(TcpTransportError {
+                        kind: fabric_package_networking_tcp::TcpTransportErrorKind::NotStarted,
+                        detail: "tcp transport has no live bound address".to_owned(),
+                    }),
+                };
                 ConsumerOutput {
                     stored,
                     process,
@@ -68,7 +74,7 @@ fabric::component! {
                     message_send,
                     message,
                     transport_observation,
-                    transport_exchange,
+                    transport_connect,
                 }
             }
         }
@@ -188,13 +194,6 @@ mod tests {
             })
         );
         assert!(output.transport_observation.actual.is_some());
-        assert!(matches!(
-            output.transport_exchange,
-            TcpExchangeResult::Connected(_)
-        ));
-        assert_eq!(
-            output.transport_exchange.received(),
-            Some(b"third-party-tcp".as_slice())
-        );
+        assert!(output.transport_connect.is_ok());
     }
 }
