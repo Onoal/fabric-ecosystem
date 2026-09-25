@@ -26,6 +26,8 @@ Fabric Ecosystem
   in-memory live state and producer/consumer component witnesses.
 - `packages/networking/tcp`: a loopback TCP byte-stream transport capability with real
   OS bind/connect/accept/read/write behavior and Component probes.
+- `packages/security/ed25519`: an Ed25519 signing capability with ephemeral
+  live private-key state, public signature evidence, and Component witnesses.
 
 Packages expose ordinary Rust functions returning Fabric contributions, so a
 consumer writes normal Fabric authoring:

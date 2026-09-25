@@ -1,0 +1,15 @@
+[package]
+name = "fabric-ecosystem-example-ed25519-signing"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+publish = false
+
+[lib]
+path = "src/lib.rs"
+
+[dependencies]
+fabric.workspace = true
+fabric-package-security-ed25519.workspace = true
+futures.workspace = true

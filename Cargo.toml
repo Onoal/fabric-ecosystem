@@ -5,6 +5,8 @@ members = [
     "packages/execution/process-runtime",
     "packages/messaging/queue",
     "packages/networking/tcp",
+    "packages/security/ed25519",
+    "examples/ed25519-signing",
     "tests/third-party-consumer",
 ]
 resolver = "2"
@@ -21,4 +23,5 @@ fabric-package-key-value = { package = "onoal-fabric-package-key-value", version
 fabric-package-messaging-queue = { package = "onoal-fabric-package-messaging-queue", version = "0.1.0", path = "packages/messaging/queue" }
 fabric-package-networking-tcp = { package = "onoal-fabric-package-networking-tcp", version = "0.1.0", path = "packages/networking/tcp" }
 fabric-package-process-runtime = { package = "onoal-fabric-package-process-runtime", version = "0.1.0", path = "packages/execution/process-runtime" }
+fabric-package-security-ed25519 = { package = "onoal-fabric-package-security-ed25519", version = "0.1.0", path = "packages/security/ed25519" }
 futures = "0.3"

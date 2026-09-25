@@ -59,6 +59,8 @@ Packages are grouped by capability ownership:
   FIFO queue.
 - `packages/networking/tcp` owns the first network/transport capability:
   loopback TCP byte streams.
+- `packages/security/ed25519` owns the first security capability: concrete
+  Ed25519 signing.
 
 This repository deliberately avoids kind-based folders such as `resources/` or
 `adapters/`. Those folders would make implementation machinery look more
@@ -70,7 +72,7 @@ The foundation is intentionally breadth-first, not exhaustive.
 
 - Network and transport packages should own real connectivity capabilities,
   not merely wrap process execution or key-value state.
-- Security and crypto packages should expose concrete cryptographic or
+- Future security packages should expose concrete cryptographic or
   authorization capabilities without borrowing identity concepts from other
   Onoal systems.
 - Observability packages should own telemetry, metrics, traces, or audit
@@ -142,6 +144,44 @@ TCP model avoids `Exchange` vocabulary. A future OXP adapter may use this kind
 of transport, but transport bytes are not OXP exchange semantics. TLS,
 certificates, DNS, hostnames, URI/Locator models, and remote identity/authority
 remain future separate capability pressure.
+
+### Ed25519 Signing
+
+`packages/security/ed25519` establishes the first real cryptographic
+capability. The semantic definition is `Ed25519Signer`, a named Resource
+occurrence representing one live signing capability. The package is
+Ed25519-specific on purpose; a generic signing abstraction is premature until
+more algorithms and key-management models have been pressure-tested.
+
+The model is intentionally small and concrete:
+
+- Messages are opaque bytes.
+- `sign` returns an Ed25519 signature over the exact bytes supplied.
+- `public_key` returns the live verifying key for the current generation.
+- Verification is a pure package function over public key, message bytes, and
+  signature bytes. It is not a Fabric Resource, System, Component, authority
+  lookup, trust decision, or certificate validation step.
+- The private key is generated during materialization/start and belongs to the
+  Adapter's live runtime state.
+- The private key is not Composition truth, not Instance observation truth, and
+  not printed by package value `Debug` implementations.
+- The first adapter is ephemeral and in-memory. Stopping a generation drops its
+  live key state; a fresh generation receives fresh live key state.
+- Durable key stores, hardware-backed signing, HSMs, remote signers, key
+  rotation, certificate chains, and policy are future adapter or package
+  pressure, not part of this first capability.
+
+An Ed25519 public key is public evidence for signature verification. It is not
+an identity, authority, account, owner, certificate, DID, Origin principal, or
+Identis subject. A valid signature proves only that the corresponding private
+key signed the bytes. It does not prove who owns the key or whether the result
+should be trusted.
+
+The package includes `SignedPayloadProducer` as a Component witness: behavior
+may consume the signer Resource through a normal Fabric relation and publish a
+payload plus public evidence. The signer Resource owns the cryptographic
+capability; the Component owns the application behavior that decides what bytes
+to sign.
 
 ## Compositions
 

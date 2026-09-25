@@ -7,6 +7,7 @@ use fabric_package_networking_tcp::{
     TcpByteStreamTransport, TcpConnectResult, TcpProbeObservation, TcpTransportError,
 };
 use fabric_package_process_runtime::{ExecutionEnvironment, ProcessOutput, ProcessRuntime};
+use fabric_package_security_ed25519::{verify_ed25519_signature, Ed25519Signer, SignedPayload};
 
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct ConsumerOutput {
@@ -17,6 +18,8 @@ pub struct ConsumerOutput {
     pub message: Option<QueueMessage>,
     pub transport_observation: TcpProbeObservation,
     pub transport_connect: Result<(), TcpTransportError>,
+    pub signed: SignedPayload,
+    pub signature_valid: bool,
 }
 
 fabric::component! {
@@ -29,6 +32,7 @@ fabric::component! {
                 process: ProcessRuntime;
                 queue: FifoQueue;
                 transport: TcpByteStreamTransport;
+                signer: Ed25519Signer;
                 environment: fabric_package_process_runtime::LocalExecutionEnvironment;
             }
         }
@@ -67,6 +71,25 @@ fabric::component! {
                         detail: "tcp transport has no live bound address".to_owned(),
                     }),
                 };
+                let public_key = self.relations()
+                    .signer
+                    .public_key()
+                    .expect("third-party signer public key");
+                let signature = self.relations()
+                    .signer
+                    .sign(b"third-party-signed".to_vec())
+                    .expect("third-party signer signs");
+                let signed = SignedPayload {
+                    payload: b"third-party-signed".to_vec(),
+                    public_key,
+                    signature,
+                };
+                let signature_valid = verify_ed25519_signature(
+                    &signed.public_key,
+                    &signed.payload,
+                    &signed.signature,
+                )
+                .expect("verify third-party signature");
                 ConsumerOutput {
                     stored,
                     process,
@@ -75,6 +98,8 @@ fabric::component! {
                     message,
                     transport_observation,
                     transport_connect,
+                    signed,
+                    signature_valid,
                 }
             }
         }
@@ -86,6 +111,7 @@ pub fn application() -> impl IntoFabricContribution {
     let process = ProcessRuntime::select("local").expect("process selection");
     let queue = FifoQueue::select("events").expect("queue selection");
     let transport = TcpByteStreamTransport::select("api").expect("transport selection");
+    let signer = Ed25519Signer::select("release").expect("signer selection");
     let component = PackageConsumer::define()
         .select_named_resource_provider(
             &fabric::authoring::ComponentResourceRequirement::new(
@@ -114,6 +140,13 @@ pub fn application() -> impl IntoFabricContribution {
                 fabric::authoring::Requires::<TcpByteStreamTransport>::provisional(),
             ),
             &transport,
+        )
+        .select_named_resource_provider(
+            &fabric::authoring::ComponentResourceRequirement::new(
+                fabric::component::ComponentRelationName::new("signer").expect("role"),
+                fabric::authoring::Requires::<Ed25519Signer>::provisional(),
+            ),
+            &signer,
         );
 
     FabricContribution::new().component(component)
@@ -137,11 +170,14 @@ mod tests {
             ))
             .with(fabric_package_messaging_queue::memory_queue("events", 4))
             .with(fabric_package_networking_tcp::loopback_tcp_transport("api"))
+            .with(fabric_package_security_ed25519::ephemeral_ed25519_signer(
+                "release",
+            ))
             .with(application())
             .build()
             .expect("composition");
 
-        assert_eq!(composition.resources().count(), 4);
+        assert_eq!(composition.resources().count(), 5);
         assert_eq!(composition.systems().count(), 1);
         assert_eq!(composition.components().count(), 1);
         assert_eq!(
@@ -169,6 +205,10 @@ mod tests {
             .relations()
             .iter()
             .any(|relation| relation.role().as_str() == "transport"));
+        assert!(composition
+            .relations()
+            .iter()
+            .any(|relation| relation.role().as_str() == "signer"));
 
         let mut instance = composition
             .materialize_on(
@@ -195,5 +235,13 @@ mod tests {
         );
         assert!(output.transport_observation.actual.is_some());
         assert!(output.transport_connect.is_ok());
+        assert_eq!(output.signed.payload, b"third-party-signed".to_vec());
+        assert!(output.signature_valid);
+        assert!(verify_ed25519_signature(
+            &output.signed.public_key,
+            &output.signed.payload,
+            &output.signed.signature,
+        )
+        .expect("public verification"));
     }
 }
