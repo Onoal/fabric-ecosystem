@@ -59,6 +59,8 @@ Packages are grouped by capability ownership:
   FIFO queue.
 - `packages/networking/tcp` owns the first network/transport capability:
   loopback TCP byte streams.
+- `packages/observability/counter` owns the first observability capability:
+  monotonic counter metrics.
 - `packages/security/ed25519` owns the first security capability: concrete
   Ed25519 signing.
 
@@ -75,7 +77,7 @@ The foundation is intentionally breadth-first, not exhaustive.
 - Future security packages should expose concrete cryptographic or
   authorization capabilities without borrowing identity concepts from other
   Onoal systems.
-- Observability packages should own telemetry, metrics, traces, or audit
+- Future observability packages may own logs, traces, exporters, or audit
   behavior when those capabilities are implemented as real Fabric definitions
   and contributions.
 
@@ -182,6 +184,63 @@ may consume the signer Resource through a normal Fabric relation and publish a
 payload plus public evidence. The signer Resource owns the cryptographic
 capability; the Component owns the application behavior that decides what bytes
 to sign.
+
+### Counter Metrics
+
+`packages/observability/counter` establishes the first real observability
+capability. The semantic definition is `CounterMetric`, a named Resource
+occurrence representing one monotonic counter. Occurrence names such as
+`requests`, `successful-sends`, or `failed-sends` are the metric identity for
+this first model; there is no separate metric registry, label system, or
+`MetricId`.
+
+The model is intentionally small:
+
+- A counter starts at zero for a fresh in-memory generation.
+- `increment(amount)` adds a non-negative `u64` amount.
+- `current()` reads the current aggregate value.
+- There is no decrement, arbitrary set, or hidden reset during a running
+  generation.
+- Overflow is explicit: an increment that would exceed `u64::MAX` returns
+  `CounterIncrementResult::Overflow` and leaves the current value unchanged.
+- Counter values are live Adapter/runtime state. They are not Composition
+  truth and do not appear before materialization/start.
+
+Fabric observation and application observability remain separate. Fabric
+`Instance::observe()` answers generic system questions such as lifecycle,
+realization, participation, and local health. Counter metrics answer
+package/application telemetry questions such as how many successful sends were
+observed by a behavior. Metrics are accessed through the package semantic API,
+not through a generic Fabric telemetry registry.
+
+Counter values are not health. A `failed-sends` value of `10` is telemetry; it
+does not automatically make a Component or Adapter unhealthy. Conversely, a
+healthy metric Adapter says only that the metric machinery is available, not
+that the observed application is good.
+
+Counter values are aggregate telemetry, not history or audit evidence. A value
+of `1842` does not contain 1842 event records, timestamps, actors, payloads,
+causal relationships, retention policy, or authoritative proof. Logs, traces,
+durable audit, and identity-aware telemetry remain separate future pressure.
+
+Instrumentation is explicit application behavior. An application Component may
+require both `FifoQueue` and `CounterMetric`, perform a queue send, and then
+increment success or failure counters according to the actual `QueueSendResult`.
+The queue package does not depend on observability, and the observability
+package does not depend on queue semantics.
+
+Future adapters may export metrics to a Prometheus-style collector,
+OpenTelemetry pipeline, or remote metrics service. That is realization concern
+or future package pressure. The counter semantic contract does not require
+scrape or push, and Fabric does not claim ownership of remote collector state.
+
+Metrics do not record Ed25519 private keys, arbitrary TCP bytes, queue payloads,
+or other sensitive package internals by default. A counter records only the
+explicit measured fact selected by the behavior that increments it.
+
+This package deliberately does not introduce OXP `Observation`, Oracle
+execution evidence, Origin/Identis identities, tracing spans, logging records,
+or audit authority.
 
 ## Compositions
 

@@ -10,3 +10,5 @@ not verification fixtures.
 - `ed25519-signing`: a compact security package example that materializes an
   ephemeral signer, signs bytes through a Component, verifies the public
   evidence, and stops the Instance.
+- `observed-queue`: a compact observability example showing application-owned
+  instrumentation over Queue behavior with success/failure counters.

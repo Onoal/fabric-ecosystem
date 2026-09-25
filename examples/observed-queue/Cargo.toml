@@ -1,0 +1,16 @@
+[package]
+name = "fabric-ecosystem-example-observed-queue"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+publish = false
+
+[lib]
+path = "src/lib.rs"
+
+[dependencies]
+fabric.workspace = true
+fabric-package-messaging-queue.workspace = true
+fabric-package-observability-counter.workspace = true
+futures.workspace = true

@@ -6,6 +6,7 @@ use fabric_package_messaging_queue::{FifoQueue, QueueMessage, QueueSendResult};
 use fabric_package_networking_tcp::{
     TcpByteStreamTransport, TcpConnectResult, TcpProbeObservation, TcpTransportError,
 };
+use fabric_package_observability_counter::{CounterMetric, DualCounterSnapshot};
 use fabric_package_process_runtime::{ExecutionEnvironment, ProcessOutput, ProcessRuntime};
 use fabric_package_security_ed25519::{verify_ed25519_signature, Ed25519Signer, SignedPayload};
 
@@ -20,6 +21,7 @@ pub struct ConsumerOutput {
     pub transport_connect: Result<(), TcpTransportError>,
     pub signed: SignedPayload,
     pub signature_valid: bool,
+    pub metric_counts: DualCounterSnapshot,
 }
 
 fabric::component! {
@@ -33,6 +35,8 @@ fabric::component! {
                 queue: FifoQueue;
                 transport: TcpByteStreamTransport;
                 signer: Ed25519Signer;
+                successful_sends: CounterMetric;
+                failed_sends: CounterMetric;
                 environment: fabric_package_process_runtime::LocalExecutionEnvironment;
             }
         }
@@ -55,6 +59,14 @@ fabric::component! {
                     .relations()
                     .queue
                     .send(b"third-party-message".to_vec());
+                match message_send {
+                    QueueSendResult::Accepted => {
+                        let _ = self.relations().successful_sends.increment(1);
+                    }
+                    QueueSendResult::Full { .. } => {
+                        let _ = self.relations().failed_sends.increment(1);
+                    }
+                }
                 let message = self.relations().queue.try_receive();
                 let transport_observation = TcpProbeObservation {
                     requested: self.relations().transport.requested_bind_address(),
@@ -90,6 +102,10 @@ fabric::component! {
                     &signed.signature,
                 )
                 .expect("verify third-party signature");
+                let metric_counts = DualCounterSnapshot {
+                    successes: self.relations().successful_sends.current(),
+                    failures: self.relations().failed_sends.current(),
+                };
                 ConsumerOutput {
                     stored,
                     process,
@@ -100,6 +116,7 @@ fabric::component! {
                     transport_connect,
                     signed,
                     signature_valid,
+                    metric_counts,
                 }
             }
         }
@@ -112,6 +129,9 @@ pub fn application() -> impl IntoFabricContribution {
     let queue = FifoQueue::select("events").expect("queue selection");
     let transport = TcpByteStreamTransport::select("api").expect("transport selection");
     let signer = Ed25519Signer::select("release").expect("signer selection");
+    let successful_sends =
+        CounterMetric::select("successful-sends").expect("successful send counter");
+    let failed_sends = CounterMetric::select("failed-sends").expect("failed send counter");
     let component = PackageConsumer::define()
         .select_named_resource_provider(
             &fabric::authoring::ComponentResourceRequirement::new(
@@ -147,6 +167,20 @@ pub fn application() -> impl IntoFabricContribution {
                 fabric::authoring::Requires::<Ed25519Signer>::provisional(),
             ),
             &signer,
+        )
+        .select_named_resource_provider(
+            &fabric::authoring::ComponentResourceRequirement::new(
+                fabric::component::ComponentRelationName::new("successful_sends").expect("role"),
+                fabric::authoring::Requires::<CounterMetric>::provisional(),
+            ),
+            &successful_sends,
+        )
+        .select_named_resource_provider(
+            &fabric::authoring::ComponentResourceRequirement::new(
+                fabric::component::ComponentRelationName::new("failed_sends").expect("role"),
+                fabric::authoring::Requires::<CounterMetric>::provisional(),
+            ),
+            &failed_sends,
         );
 
     FabricContribution::new().component(component)
@@ -173,11 +207,17 @@ mod tests {
             .with(fabric_package_security_ed25519::ephemeral_ed25519_signer(
                 "release",
             ))
+            .with(fabric_package_observability_counter::in_memory_counter(
+                "successful-sends",
+            ))
+            .with(fabric_package_observability_counter::in_memory_counter(
+                "failed-sends",
+            ))
             .with(application())
             .build()
             .expect("composition");
 
-        assert_eq!(composition.resources().count(), 5);
+        assert_eq!(composition.resources().count(), 7);
         assert_eq!(composition.systems().count(), 1);
         assert_eq!(composition.components().count(), 1);
         assert_eq!(
@@ -209,6 +249,14 @@ mod tests {
             .relations()
             .iter()
             .any(|relation| relation.role().as_str() == "signer"));
+        assert!(composition
+            .relations()
+            .iter()
+            .any(|relation| relation.role().as_str() == "successful_sends"));
+        assert!(composition
+            .relations()
+            .iter()
+            .any(|relation| relation.role().as_str() == "failed_sends"));
 
         let mut instance = composition
             .materialize_on(
@@ -243,5 +291,12 @@ mod tests {
             &output.signed.signature,
         )
         .expect("public verification"));
+        assert_eq!(
+            output.metric_counts,
+            DualCounterSnapshot {
+                successes: 1,
+                failures: 0
+            }
+        );
     }
 }

@@ -1,0 +1,18 @@
+[package]
+name = "onoal-fabric-package-observability-counter"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+description = "Counter metric observability package for Fabric"
+
+[lib]
+name = "fabric_package_observability_counter"
+path = "src/lib.rs"
+
+[dependencies]
+fabric.workspace = true
+
+[dev-dependencies]
+fabric-package-messaging-queue.workspace = true
+futures.workspace = true

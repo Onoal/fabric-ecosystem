@@ -145,6 +145,16 @@ dependencies = [
 ]
 
 [[package]]
+name = "fabric-ecosystem-example-observed-queue"
+version = "0.1.0"
+dependencies = [
+ "futures",
+ "onoal-fabric",
+ "onoal-fabric-package-messaging-queue",
+ "onoal-fabric-package-observability-counter",
+]
+
+[[package]]
 name = "fabric-ecosystem-third-party-consumer"
 version = "0.1.0"
 dependencies = [
@@ -153,6 +163,7 @@ dependencies = [
  "onoal-fabric-package-key-value",
  "onoal-fabric-package-messaging-queue",
  "onoal-fabric-package-networking-tcp",
+ "onoal-fabric-package-observability-counter",
  "onoal-fabric-package-process-runtime",
  "onoal-fabric-package-security-ed25519",
 ]
@@ -364,6 +375,15 @@ version = "0.1.0"
 dependencies = [
  "futures",
  "onoal-fabric",
+]
+
+[[package]]
+name = "onoal-fabric-package-observability-counter"
+version = "0.1.0"
+dependencies = [
+ "futures",
+ "onoal-fabric",
+ "onoal-fabric-package-messaging-queue",
 ]
 
 [[package]]
