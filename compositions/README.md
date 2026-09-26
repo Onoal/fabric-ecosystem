@@ -16,9 +16,16 @@ HTTP Server assembly and adds SQLite relational persistence plus Console
 logging as a local backend foundation. Application behavior remains ordinary
 consumer-owned Fabric Components.
 
-It also records the current Fabric v1 Component identity law: the first
-assembly provides one `HttpServer` Component definition occurrence per built
-Composition, while preserving explicit named TCP occurrence selection.
+`compositions/messaging/local-queue-pipeline` is the first messaging
+Composition family. It assembles one named in-memory `FifoQueue`, one
+`QueueProducer`, and one `QueueConsumer`. Worker behavior remains
+consumer-owned; this Composition is not a WorkerRuntime, scheduler, or durable
+broker.
+
+The web and messaging Compositions both record the current Fabric v1 Component
+identity law: reusable assemblies can preserve explicit named Resource
+occurrences, while repeated use of the same package Component definitions in
+one built Composition is constrained by definition-scoped Component identity.
 
 Good future candidates include storage-serving systems, compute-serving
 systems, worker systems, or additional local development stacks.

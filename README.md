@@ -48,6 +48,9 @@ Fabric Ecosystem
 - `compositions/web/local-backend`: a nested local backend foundation that
   reuses the HTTP Server Composition and adds SQLite persistence plus Console
   logging.
+- `compositions/messaging/local-queue-pipeline`: a local messaging foundation
+  that assembles one named in-memory FIFO queue with one producer and one
+  consumer.
 
 Packages expose ordinary Rust functions returning Fabric contributions, so a
 consumer writes normal Fabric authoring:

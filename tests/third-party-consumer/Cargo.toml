@@ -8,6 +8,7 @@ publish = false
 fabric.workspace = true
 fabric-composition-http-server.workspace = true
 fabric-composition-local-backend.workspace = true
+fabric-composition-local-queue-pipeline.workspace = true
 fabric-host-linux.workspace = true
 fabric-package-key-value.workspace = true
 fabric-package-messaging-queue.workspace = true

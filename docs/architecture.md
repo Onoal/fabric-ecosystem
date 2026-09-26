@@ -180,6 +180,21 @@ not become owner of remote canonical state. OXP remains transport/exchange
 machinery, Oracle remains planning/control, and Origin/Identis identity or
 authority concepts are not mandatory messaging primitives.
 
+`compositions/messaging/local-queue-pipeline` builds on that package as the
+first messaging Composition family:
+
+```text
+memory_queue(name, capacity)
++ queue_producer(name)
++ queue_consumer(name)
+= local_queue_pipeline(name, capacity)
+```
+
+The Composition owns the local assembly opinion. It does not define a new
+message, worker, scheduler, durable broker, retry, acknowledgement, or
+background processing model. Consumer-owned Components can be added to process
+messages by requiring the named `FifoQueue`.
+
 ### TCP Byte-Stream Transport
 
 `packages/networking/tcp` establishes the first real external I/O capability.
@@ -410,6 +425,8 @@ Current and future classification:
 - `compositions/web/http-server`: current reusable local HTTP-serving assembly.
 - `compositions/web/local-backend`: current nested local backend foundation
   that reuses the HTTP server assembly and adds SQLite plus Console logging.
+- `compositions/messaging/local-queue-pipeline`: current local messaging
+  pipeline assembly.
 - `packages/data/...`: reusable storage/data capabilities.
 - `compositions/servers/storage-server`: possible future assembled
   storage-serving system.
@@ -455,6 +472,13 @@ registration, or Component-to-Component injection. Consumers extend it by
 adding ordinary Fabric Components that require `RelationalDatabase` and
 `LogSink`.
 
+`compositions/messaging/local-queue-pipeline` proves `compositions/` is not
+synonymous with web/backend templates. It assembles a non-durable local
+messaging pipeline from the Queue package and leaves worker/application
+behavior to consumers. It also preserves the distinction between multiple
+Resource occurrences, which can coexist, and repeated package Component
+definitions, which are constrained by current Fabric v1 Component identity.
+
 The default Composition artifact shape is:
 
 ```text
@@ -496,6 +520,8 @@ agent answer questions such as:
 - which packages exist?
 - which category owns this capability?
 - where are reusable compositions?
+- which Composition categories exist, such as web or messaging?
+- which Composition artifacts consume other Compositions or Packages?
 - which examples teach a package?
 - which tests verify third-party public consumption?
 

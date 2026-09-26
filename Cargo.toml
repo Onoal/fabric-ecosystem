@@ -1,10 +1,12 @@
 [workspace]
 members = [
+    "compositions/messaging/local-queue-pipeline",
     "compositions/web/http-server",
     "compositions/web/local-backend",
     "examples/key-value-quickstart",
     "examples/http-server",
     "examples/local-backend",
+    "examples/local-queue-pipeline",
     "examples/observed-queue",
     "hosts/linux",
     "packages/data/key-value",
@@ -32,6 +34,7 @@ version = "0.1.0"
 fabric = { package = "onoal-fabric", version = "1.0.0" }
 fabric-composition-http-server = { package = "onoal-fabric-composition-http-server", version = "0.1.0", path = "compositions/web/http-server" }
 fabric-composition-local-backend = { package = "onoal-fabric-composition-local-backend", version = "0.1.0", path = "compositions/web/local-backend" }
+fabric-composition-local-queue-pipeline = { package = "onoal-fabric-composition-local-queue-pipeline", version = "0.1.0", path = "compositions/messaging/local-queue-pipeline" }
 fabric-host-linux = { package = "onoal-fabric-host-linux", version = "0.1.0", path = "hosts/linux" }
 fabric-package-key-value = { package = "onoal-fabric-package-key-value", version = "0.1.0", path = "packages/data/key-value" }
 fabric-package-relational-database = { package = "onoal-fabric-package-relational-database", version = "0.1.0", path = "packages/data/relational-database" }
