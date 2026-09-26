@@ -6,6 +6,7 @@ publish = false
 
 [dependencies]
 fabric.workspace = true
+fabric-composition-http-server.workspace = true
 fabric-host-linux.workspace = true
 fabric-package-key-value.workspace = true
 fabric-package-messaging-queue.workspace = true

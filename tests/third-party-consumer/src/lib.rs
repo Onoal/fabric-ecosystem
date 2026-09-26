@@ -242,9 +242,10 @@ pub fn application() -> impl IntoFabricContribution {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use fabric_package_networking_http::{
-        http_server, HttpResponse, HttpServer, HttpServerInstanceApi,
+    use fabric_composition_http_server::{
+        build_http_server_composition, http_server_stack, HttpServerCompositionConfig,
     };
+    use fabric_package_networking_http::{HttpResponse, HttpServer, HttpServerInstanceApi};
     use fabric_package_networking_tcp::{TcpTransportProbe, TcpTransportProbeInstanceApi};
     use futures::executor::block_on;
     use std::io::{Read, Write};
@@ -408,19 +409,17 @@ mod tests {
     }
 
     #[test]
-    fn third_party_consumer_uses_http_server_over_public_tcp_package() {
+    fn third_party_consumer_uses_reusable_http_server_composition() {
         #[cfg(target_os = "linux")]
         let host = fabric_host_linux::detect_linux_host().expect("linux host detection");
         #[cfg(not(target_os = "linux"))]
         let host = HostDescriptor::native();
 
-        let composition = Fabric::new("onoal.package.test.third-party.http")
-            .expect("fabric")
-            .with(fabric_package_networking_tcp::loopback_tcp_transport("api"))
-            .with(fabric_package_networking_tcp::tcp_transport_probe("api"))
-            .with(http_server("api"))
-            .build()
-            .expect("composition");
+        let composition = build_http_server_composition(
+            "onoal.package.test.third-party.http",
+            HttpServerCompositionConfig::local("api"),
+        )
+        .expect("composition");
         let mut instance = composition
             .materialize_on("onoal.package.test.third-party.http.instance", &host)
             .expect("instance");
@@ -460,5 +459,26 @@ mod tests {
         assert_eq!(request.target, "/third-party");
         assert!(response.starts_with("HTTP/1.1 200 OK\r\n"));
         assert!(response.ends_with("\r\n\r\nthird-party-http"));
+    }
+
+    #[test]
+    fn third_party_consumer_reuses_http_stack_inside_larger_fabric_build() {
+        let composition = Fabric::new("onoal.package.test.third-party.http.reuse")
+            .expect("fabric")
+            .with(http_server_stack(HttpServerCompositionConfig::local("api")))
+            .with(fabric_package_key_value::memory_key_value("scratch"))
+            .build()
+            .expect("composition");
+
+        assert!(composition
+            .resources()
+            .any(|resource| resource.name().as_str() == "api"));
+        assert!(composition
+            .resources()
+            .any(|resource| resource.name().as_str() == "scratch"));
+        assert!(composition
+            .components()
+            .any(|component| component.component_id().as_str()
+                == "onoal.package.networking.http.server"));
     }
 }

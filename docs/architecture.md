@@ -403,12 +403,11 @@ may contain package-provided definitions, project-specific definitions, custom
 Components, custom config, explicit relations, and ordinary Fabric authoring.
 Its defining property is coherent assembled system truth.
 
-Illustrative future classification:
+Current and future classification:
 
 - `packages/networking/tcp`: reusable TCP capability.
 - `packages/networking/http`: reusable HTTP/1 protocol behavior over TCP.
-- `compositions/servers/http-server`: possible future complete HTTP-serving
-  system.
+- `compositions/web/http-server`: current reusable local HTTP-serving assembly.
 - `packages/data/...`: reusable storage/data capabilities.
 - `compositions/servers/storage-server`: possible future assembled
   storage-serving system.
@@ -416,8 +415,28 @@ Illustrative future classification:
 - `compositions/servers/compute-server`: possible future assembled compute
   serving system.
 
-These are examples, not implemented artifacts. A `servers/` taxonomy would be a
-repository taxonomy, not a Fabric `Server` semantic primitive.
+Future entries in that list are examples, not implemented artifacts. A folder
+such as `web/` or `servers/` is repository taxonomy, not a Fabric semantic
+primitive.
+
+`compositions/web/http-server` consumes:
+
+```text
+packages/networking/tcp
+    TCP capability and loopback realization
+
+packages/networking/http
+    HTTP behavior Component
+```
+
+It contributes one named TCP Resource occurrence, the existing
+`TcpTransportProbe` for runtime address discovery, and the existing
+`HttpServer` Component. The resulting `fabric::Composition` contains ordinary
+Fabric Resources, Components, relations, realization, and config only.
+
+Current Fabric v1 Component identity is definition-scoped. The HTTP server
+Composition therefore supports one `HttpServer` Component definition occurrence
+per built Composition while keeping the TCP occurrence name explicit.
 
 The default Composition artifact shape is:
 

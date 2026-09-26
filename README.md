@@ -42,6 +42,9 @@ Fabric Ecosystem
   live private-key state, public signature evidence, and Component witnesses.
 - `hosts/linux`: Linux Host detection, Linux facility identifiers, and reusable
   Host requirements using Fabric's existing Host model.
+- `compositions/web/http-server`: the first reusable Composition artifact,
+  assembling TCP loopback realization, TCP runtime address discovery, and
+  HTTP/1 server behavior.
 
 Packages expose ordinary Rust functions returning Fabric contributions, so a
 consumer writes normal Fabric authoring:
@@ -64,8 +67,8 @@ may contain all of those Fabric authoring forms.
 existing Host model. Host artifacts are not Resources, Systems, Components, or
 Adapters.
 
-`compositions/` is reserved for coherent reusable assembled systems. It is not
-a package bucket and not a second Fabric runtime primitive.
+`compositions/` contains coherent reusable assembled systems. It is not a
+package bucket and not a second Fabric runtime primitive.
 
 `examples/` contains learning artifacts. Examples may be explicit and
 pedagogical; they are not compatibility fixtures.

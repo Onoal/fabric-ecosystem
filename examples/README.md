@@ -13,5 +13,8 @@ reusable ecosystem semantics merely because they are runnable.
 - `ed25519-signing`: a compact security package example that materializes an
   ephemeral signer, signs bytes through a Component, verifies the public
   evidence, and stops the Instance.
+- `http-server`: a compact Composition example that consumes the reusable HTTP
+  server assembly, materializes it, discovers the bound TCP address, and serves
+  one real loopback HTTP request.
 - `observed-queue`: a compact observability example showing application-owned
   instrumentation over Queue behavior with success/failure counters.

@@ -1,0 +1,20 @@
+[package]
+name = "onoal-fabric-composition-http-server"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+description = "Reusable HTTP server composition for Fabric Ecosystem"
+
+[lib]
+name = "fabric_composition_http_server"
+path = "src/lib.rs"
+
+[dependencies]
+fabric.workspace = true
+fabric-package-networking-http.workspace = true
+fabric-package-networking-tcp.workspace = true
+
+[dev-dependencies]
+fabric-package-key-value.workspace = true
+futures.workspace = true

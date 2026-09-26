@@ -1,6 +1,8 @@
 [workspace]
 members = [
+    "compositions/web/http-server",
     "examples/key-value-quickstart",
+    "examples/http-server",
     "examples/observed-queue",
     "hosts/linux",
     "packages/data/key-value",
@@ -26,6 +28,7 @@ version = "0.1.0"
 
 [workspace.dependencies]
 fabric = { package = "onoal-fabric", version = "1.0.0" }
+fabric-composition-http-server = { package = "onoal-fabric-composition-http-server", version = "0.1.0", path = "compositions/web/http-server" }
 fabric-host-linux = { package = "onoal-fabric-host-linux", version = "0.1.0", path = "hosts/linux" }
 fabric-package-key-value = { package = "onoal-fabric-package-key-value", version = "0.1.0", path = "packages/data/key-value" }
 fabric-package-relational-database = { package = "onoal-fabric-package-relational-database", version = "0.1.0", path = "packages/data/relational-database" }

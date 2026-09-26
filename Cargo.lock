@@ -164,6 +164,17 @@ dependencies = [
 ]
 
 [[package]]
+name = "fabric-ecosystem-example-http-server"
+version = "0.1.0"
+dependencies = [
+ "futures",
+ "onoal-fabric",
+ "onoal-fabric-composition-http-server",
+ "onoal-fabric-package-networking-http",
+ "onoal-fabric-package-networking-tcp",
+]
+
+[[package]]
 name = "fabric-ecosystem-example-key-value-quickstart"
 version = "0.1.0"
 dependencies = [
@@ -188,6 +199,7 @@ version = "0.1.0"
 dependencies = [
  "futures",
  "onoal-fabric",
+ "onoal-fabric-composition-http-server",
  "onoal-fabric-host-linux",
  "onoal-fabric-package-key-value",
  "onoal-fabric-package-messaging-queue",
@@ -427,6 +439,17 @@ dependencies = [
  "onoal-fabric-core",
  "onoal-fabric-resource",
  "onoal-fabric-system",
+]
+
+[[package]]
+name = "onoal-fabric-composition-http-server"
+version = "0.1.0"
+dependencies = [
+ "futures",
+ "onoal-fabric",
+ "onoal-fabric-package-key-value",
+ "onoal-fabric-package-networking-http",
+ "onoal-fabric-package-networking-tcp",
 ]
 
 [[package]]
