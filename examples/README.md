@@ -16,5 +16,8 @@ reusable ecosystem semantics merely because they are runnable.
 - `http-server`: a compact Composition example that consumes the reusable HTTP
   server assembly, materializes it, discovers the bound TCP address, and serves
   one real loopback HTTP request.
+- `local-backend`: a compact nested-Composition example that consumes the local
+  backend foundation, adds application-owned database/log behavior, and serves
+  one HTTP response from local data.
 - `observed-queue`: a compact observability example showing application-owned
   instrumentation over Queue behavior with success/failure counters.

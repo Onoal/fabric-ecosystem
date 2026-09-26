@@ -184,6 +184,19 @@ dependencies = [
 ]
 
 [[package]]
+name = "fabric-ecosystem-example-local-backend"
+version = "0.1.0"
+dependencies = [
+ "futures",
+ "onoal-fabric",
+ "onoal-fabric-composition-local-backend",
+ "onoal-fabric-package-networking-http",
+ "onoal-fabric-package-networking-tcp",
+ "onoal-fabric-package-observability-logging",
+ "onoal-fabric-package-relational-database",
+]
+
+[[package]]
 name = "fabric-ecosystem-example-observed-queue"
 version = "0.1.0"
 dependencies = [
@@ -200,6 +213,7 @@ dependencies = [
  "futures",
  "onoal-fabric",
  "onoal-fabric-composition-http-server",
+ "onoal-fabric-composition-local-backend",
  "onoal-fabric-host-linux",
  "onoal-fabric-package-key-value",
  "onoal-fabric-package-messaging-queue",
@@ -450,6 +464,20 @@ dependencies = [
  "onoal-fabric-package-key-value",
  "onoal-fabric-package-networking-http",
  "onoal-fabric-package-networking-tcp",
+]
+
+[[package]]
+name = "onoal-fabric-composition-local-backend"
+version = "0.1.0"
+dependencies = [
+ "futures",
+ "onoal-fabric",
+ "onoal-fabric-composition-http-server",
+ "onoal-fabric-package-networking-http",
+ "onoal-fabric-package-networking-tcp",
+ "onoal-fabric-package-observability-logging",
+ "onoal-fabric-package-relational-database",
+ "onoal-fabric-package-sqlite",
 ]
 
 [[package]]

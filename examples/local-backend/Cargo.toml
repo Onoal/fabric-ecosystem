@@ -1,0 +1,14 @@
+[package]
+name = "fabric-ecosystem-example-local-backend"
+version = "0.1.0"
+edition = "2021"
+publish = false
+
+[dependencies]
+fabric.workspace = true
+fabric-composition-local-backend.workspace = true
+fabric-package-networking-http.workspace = true
+fabric-package-networking-tcp.workspace = true
+fabric-package-observability-logging.workspace = true
+fabric-package-relational-database.workspace = true
+futures.workspace = true

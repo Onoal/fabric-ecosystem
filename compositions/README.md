@@ -11,12 +11,17 @@ package's local loopback realization, TCP runtime address discovery, and the
 HTTP package's one-request server behavior into one reusable local HTTP-serving
 system.
 
+`compositions/web/local-backend` is the first nested Composition. It reuses the
+HTTP Server assembly and adds SQLite relational persistence plus Console
+logging as a local backend foundation. Application behavior remains ordinary
+consumer-owned Fabric Components.
+
 It also records the current Fabric v1 Component identity law: the first
 assembly provides one `HttpServer` Component definition occurrence per built
 Composition, while preserving explicit named TCP occurrence selection.
 
 Good future candidates include storage-serving systems, compute-serving
-systems, worker systems, or local development stacks.
+systems, worker systems, or additional local development stacks.
 
 Do not add a Composition artifact merely to bundle all current packages
 together. A Composition may use ecosystem packages, project-specific Fabric

@@ -45,6 +45,9 @@ Fabric Ecosystem
 - `compositions/web/http-server`: the first reusable Composition artifact,
   assembling TCP loopback realization, TCP runtime address discovery, and
   HTTP/1 server behavior.
+- `compositions/web/local-backend`: a nested local backend foundation that
+  reuses the HTTP Server Composition and adds SQLite persistence plus Console
+  logging.
 
 Packages expose ordinary Rust functions returning Fabric contributions, so a
 consumer writes normal Fabric authoring:

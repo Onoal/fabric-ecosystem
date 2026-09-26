@@ -408,6 +408,8 @@ Current and future classification:
 - `packages/networking/tcp`: reusable TCP capability.
 - `packages/networking/http`: reusable HTTP/1 protocol behavior over TCP.
 - `compositions/web/http-server`: current reusable local HTTP-serving assembly.
+- `compositions/web/local-backend`: current nested local backend foundation
+  that reuses the HTTP server assembly and adds SQLite plus Console logging.
 - `packages/data/...`: reusable storage/data capabilities.
 - `compositions/servers/storage-server`: possible future assembled
   storage-serving system.
@@ -437,6 +439,21 @@ Fabric Resources, Components, relations, realization, and config only.
 Current Fabric v1 Component identity is definition-scoped. The HTTP server
 Composition therefore supports one `HttpServer` Component definition occurrence
 per built Composition while keeping the TCP occurrence name explicit.
+
+`compositions/web/local-backend` demonstrates Composition nesting:
+
+```text
+http_server_stack(...)
+    + sqlite_database_with(...)
+    + console_logging_with(...)
+    = local_backend_stack(...)
+```
+
+It provides HTTP serving capability, persistent relational storage, and a
+logging sink. It does not define application behavior, routing, an ORM, handler
+registration, or Component-to-Component injection. Consumers extend it by
+adding ordinary Fabric Components that require `RelationalDatabase` and
+`LogSink`.
 
 The default Composition artifact shape is:
 

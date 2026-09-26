@@ -245,6 +245,9 @@ mod tests {
     use fabric_composition_http_server::{
         build_http_server_composition, http_server_stack, HttpServerCompositionConfig,
     };
+    use fabric_composition_local_backend::{
+        build_local_backend_composition, local_backend_stack, LocalBackendCompositionConfig,
+    };
     use fabric_package_networking_http::{HttpResponse, HttpServer, HttpServerInstanceApi};
     use fabric_package_networking_tcp::{TcpTransportProbe, TcpTransportProbeInstanceApi};
     use futures::executor::block_on;
@@ -253,6 +256,80 @@ mod tests {
     use std::path::PathBuf;
     use std::thread;
     use std::time::{SystemTime, UNIX_EPOCH};
+
+    #[derive(Clone, Debug, PartialEq)]
+    struct ThirdPartyBackendAppResult {
+        rows: RelationalQueryResult,
+        logged: LogRecord,
+    }
+
+    fabric::component! {
+        ThirdPartyBackendApp {
+            id: "onoal.package.test.third-party.local-backend.app";
+
+            relations {
+                requires {
+                    database: RelationalDatabase;
+                    log: LogSink;
+                }
+            }
+
+            api {
+                fn exercise_backend(&self) -> Result<ThirdPartyBackendAppResult, String>;
+            }
+
+            runtime {
+                fn exercise_backend(&self) -> Result<ThirdPartyBackendAppResult, String> {
+                    self.relations().database.execute(
+                        "CREATE TABLE IF NOT EXISTS third_party_backend_items (id INTEGER, value TEXT NOT NULL)".to_owned(),
+                        vec![],
+                    ).map_err(|error| error.to_string())?;
+                    self.relations().database.execute(
+                        "INSERT INTO third_party_backend_items (id, value) VALUES (?1, ?2)".to_owned(),
+                        vec![
+                            RelationalValue::Integer(1),
+                            RelationalValue::Text("backend-consumer".to_owned()),
+                        ],
+                    ).map_err(|error| error.to_string())?;
+                    let rows = self.relations().database.query(
+                        "SELECT id, value FROM third_party_backend_items ORDER BY id".to_owned(),
+                        vec![],
+                    ).map_err(|error| error.to_string())?;
+                    let logged = LogRecord::targeted(
+                        fabric_package_observability_logging::LogLevel::Info,
+                        "third-party-local-backend",
+                        "third-party backend app used local backend foundation",
+                    );
+                    self.relations().log.emit(logged.clone()).map_err(|error| error.to_string())?;
+                    Ok(ThirdPartyBackendAppResult { rows, logged })
+                }
+            }
+        }
+    }
+
+    fn third_party_backend_app(
+        database_name: &'static str,
+        log_name: &'static str,
+    ) -> impl IntoFabricContribution {
+        let database = RelationalDatabase::select(database_name).expect("database selection");
+        let log = LogSink::select(log_name).expect("log selection");
+        let component = ThirdPartyBackendApp::define()
+            .select_named_resource_provider(
+                &fabric::authoring::ComponentResourceRequirement::new(
+                    fabric::component::ComponentRelationName::new("database").expect("role"),
+                    fabric::authoring::Requires::<RelationalDatabase>::provisional(),
+                ),
+                &database,
+            )
+            .select_named_resource_provider(
+                &fabric::authoring::ComponentResourceRequirement::new(
+                    fabric::component::ComponentRelationName::new("log").expect("role"),
+                    fabric::authoring::Requires::<LogSink>::provisional(),
+                ),
+                &log,
+            );
+        FabricContribution::new().component(component)
+    }
 
     fn unique_sqlite_path() -> PathBuf {
         let nanos = SystemTime::now()
@@ -480,5 +557,113 @@ mod tests {
             .components()
             .any(|component| component.component_id().as_str()
                 == "onoal.package.networking.http.server"));
+    }
+
+    #[test]
+    fn third_party_consumer_uses_standalone_local_backend_composition() {
+        #[cfg(target_os = "linux")]
+        let host = fabric_host_linux::detect_linux_host().expect("linux host detection");
+        #[cfg(not(target_os = "linux"))]
+        let host = HostDescriptor::native();
+        let database_path = unique_sqlite_path();
+
+        let composition = build_local_backend_composition(
+            "onoal.package.test.third-party.local-backend",
+            LocalBackendCompositionConfig::local(
+                "api",
+                "primary-db",
+                database_path.clone(),
+                "application-log",
+            ),
+        )
+        .expect("local backend composition");
+        let mut instance = composition
+            .materialize_on(
+                "onoal.package.test.third-party.local-backend.instance",
+                &host,
+            )
+            .expect("instance");
+        instance.start().expect("start");
+
+        let probe = instance
+            .component::<TcpTransportProbe>()
+            .expect("transport probe");
+        probe.reconcile().expect("probe reconcile");
+        let server = instance.component::<HttpServer>().expect("http server");
+        server.reconcile().expect("server reconcile");
+        let address = block_on(probe.observe_transport())
+            .expect("observe transport")
+            .actual
+            .expect("bound TCP address");
+        let client = thread::spawn(move || {
+            let socket: SocketAddr = format!("{}:{}", address.host, address.port)
+                .parse()
+                .expect("socket addr");
+            let mut stream = TcpStream::connect(socket).expect("client connect");
+            stream
+                .write_all(b"GET /local-backend HTTP/1.1\r\nHost: consumer.test\r\n\r\n")
+                .expect("write request");
+            stream.shutdown(Shutdown::Write).expect("shutdown write");
+            let mut response = Vec::new();
+            stream.read_to_end(&mut response).expect("read response");
+            response
+        });
+
+        let request = block_on(server.serve_once(HttpResponse::new(
+            200,
+            b"third-party-local-backend".to_vec(),
+        )))
+        .expect("serve")
+        .expect("request");
+        let response = String::from_utf8(client.join().expect("client")).expect("response utf8");
+
+        assert_eq!(request.target, "/local-backend");
+        assert!(response.ends_with("\r\n\r\nthird-party-local-backend"));
+        let _ = std::fs::remove_file(database_path);
+    }
+
+    #[test]
+    fn third_party_application_extends_local_backend_stack() {
+        let database_path = unique_sqlite_path();
+        let composition = Fabric::new("onoal.package.test.third-party.local-backend.extension")
+            .expect("fabric")
+            .with(local_backend_stack(LocalBackendCompositionConfig::local(
+                "api",
+                "primary-db",
+                database_path.clone(),
+                "application-log",
+            )))
+            .with(third_party_backend_app("primary-db", "application-log"))
+            .build()
+            .expect("composition");
+        let mut instance = composition
+            .materialize_on(
+                "onoal.package.test.third-party.local-backend.extension.instance",
+                &HostDescriptor::native(),
+            )
+            .expect("instance");
+        instance.start().expect("start");
+
+        let app = instance
+            .component::<ThirdPartyBackendApp>()
+            .expect("consumer");
+        app.reconcile().expect("component reconcile");
+        let output = block_on(app.exercise_backend())
+            .expect("exercise")
+            .expect("backend result");
+
+        assert_eq!(
+            output.rows.rows()[0].values(),
+            &[
+                RelationalValue::Integer(1),
+                RelationalValue::Text("backend-consumer".to_owned()),
+            ]
+        );
+        assert_eq!(
+            output.logged.target.as_deref(),
+            Some("third-party-local-backend")
+        );
+        instance.stop().expect("stop");
+        let _ = std::fs::remove_file(database_path);
     }
 }

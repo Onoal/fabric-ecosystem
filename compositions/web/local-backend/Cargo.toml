@@ -1,0 +1,23 @@
+[package]
+name = "onoal-fabric-composition-local-backend"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+description = "Reusable local backend foundation composition for Fabric Ecosystem"
+
+[lib]
+name = "fabric_composition_local_backend"
+path = "src/lib.rs"
+
+[dependencies]
+fabric.workspace = true
+fabric-composition-http-server.workspace = true
+fabric-package-observability-logging.workspace = true
+fabric-package-sqlite.workspace = true
+
+[dev-dependencies]
+fabric-package-networking-http.workspace = true
+fabric-package-networking-tcp.workspace = true
+fabric-package-relational-database.workspace = true
+futures.workspace = true
