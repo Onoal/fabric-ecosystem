@@ -31,7 +31,7 @@ Fabric Ecosystem
 - `packages/messaging/queue`: a bounded non-durable FIFO queue capability with
   in-memory live state and producer/consumer component witnesses.
 - `packages/networking/tcp`: a loopback TCP byte-stream transport capability with real
-  OS bind/connect/accept/read/write behavior and Component probes.
+  OS bind/connect/accept/read/write behavior and runtime inspection.
 - `packages/networking/http`: HTTP/1 server behavior layered over the TCP
   byte-stream capability.
 - `packages/observability/counter`: a monotonic counter metric capability with

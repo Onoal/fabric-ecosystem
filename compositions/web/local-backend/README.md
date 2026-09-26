@@ -7,7 +7,7 @@ persistence and logging:
 ```text
 HTTP Server Composition
     TCP loopback realization
-    TcpTransportProbe
+    TcpTransportInspector
     HttpServer
 
 SQLite RelationalDatabase

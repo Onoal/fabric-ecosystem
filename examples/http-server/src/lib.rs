@@ -8,7 +8,7 @@ use fabric::prelude::*;
 use fabric_composition_http_server::{build_http_server_composition, HttpServerCompositionConfig};
 use fabric_package_networking_http::{HttpResponse, HttpServer, HttpServerInstanceApi};
 use fabric_package_networking_tcp::{
-    TcpSocketAddress, TcpTransportProbe, TcpTransportProbeInstanceApi,
+    TcpSocketAddress, TcpTransportInspector, TcpTransportInspectorInstanceApi,
 };
 use futures::executor::block_on;
 
@@ -23,9 +23,9 @@ pub fn run() -> Result<String, Box<dyn std::error::Error>> {
     )?;
     instance.start()?;
 
-    let probe = instance.component::<TcpTransportProbe>()?;
-    probe.reconcile()?;
-    let address = block_on(probe.observe_transport())?
+    let inspector = instance.component::<TcpTransportInspector>()?;
+    inspector.reconcile()?;
+    let address = block_on(inspector.inspect_transport())?
         .actual
         .ok_or("http server did not bind a TCP address")?;
     let server = instance.component::<HttpServer>()?;

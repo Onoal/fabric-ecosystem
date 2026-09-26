@@ -35,7 +35,7 @@ pub fn http_server_stack(config: HttpServerCompositionConfig) -> impl IntoFabric
             config.transport_name,
             config.bind,
         ))
-        .with(fabric_package_networking_tcp::tcp_transport_probe(
+        .with(fabric_package_networking_tcp::tcp_transport_inspector(
             config.transport_name,
         ))
         .with(fabric_package_networking_http::http_server(
@@ -65,7 +65,8 @@ mod tests {
         HttpResponse, HttpServer, HttpServerInstanceApi, HttpVersion,
     };
     use fabric_package_networking_tcp::{
-        TcpProbeObservation, TcpSocketAddress, TcpTransportProbe, TcpTransportProbeInstanceApi,
+        TcpSocketAddress, TcpTransportInspection, TcpTransportInspector,
+        TcpTransportInspectorInstanceApi,
     };
     use futures::executor::block_on;
     use std::io::{Read, Write};
@@ -88,9 +89,9 @@ mod tests {
         component
     }
 
-    fn actual_address(probe: &BoundComponent<'_, TcpTransportProbe>) -> TcpSocketAddress {
-        let observation: TcpProbeObservation =
-            block_on(probe.observe_transport()).expect("observe");
+    fn actual_address(inspector: &BoundComponent<'_, TcpTransportInspector>) -> TcpSocketAddress {
+        let observation: TcpTransportInspection =
+            block_on(inspector.inspect_transport()).expect("observe");
         observation.actual.expect("actual address")
     }
 
@@ -111,7 +112,7 @@ mod tests {
     }
 
     #[test]
-    fn standalone_composition_declares_tcp_probe_and_http_server_truth() {
+    fn standalone_composition_declares_tcp_inspector_and_http_server_truth() {
         let composition = build_http_server_composition(
             "onoal.composition.test.http-server.inspect",
             HttpServerCompositionConfig::local("api"),
@@ -129,7 +130,7 @@ mod tests {
         assert!(composition
             .components()
             .any(|component| component.component_id().as_str()
-                == "onoal.package.networking.tcp.probe"));
+                == "onoal.package.networking.tcp.inspector"));
         assert!(composition
             .components()
             .any(|component| component.component_id().as_str()
@@ -160,8 +161,8 @@ mod tests {
             &composition,
             "onoal.composition.test.http-server.bind.instance",
         );
-        let probe = activate::<TcpTransportProbe>(&instance);
-        let observation = block_on(probe.observe_transport()).expect("observe");
+        let inspector = activate::<TcpTransportInspector>(&instance);
+        let observation = block_on(inspector.inspect_transport()).expect("observe");
 
         assert_eq!(observation.requested, requested);
         assert_eq!(observation.requested.port, 0);
@@ -179,9 +180,9 @@ mod tests {
             &composition,
             "onoal.composition.test.http-server.runtime.instance",
         );
-        let probe = activate::<TcpTransportProbe>(&instance);
+        let inspector = activate::<TcpTransportInspector>(&instance);
         let server = activate::<HttpServer>(&instance);
-        let address = actual_address(&probe);
+        let address = actual_address(&inspector);
         let client = http_client(address, "/composition");
 
         let request = block_on(

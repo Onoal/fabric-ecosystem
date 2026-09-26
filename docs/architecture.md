@@ -113,6 +113,27 @@ includes, what it deliberately does not own, and how another realization can
 be added. It should not create fake `resource.rs`, `adapter.rs`, `system.rs`,
 or `component.rs` files when its actual complexity does not need them.
 
+### Internal Package Quality
+
+Serious ecosystem packages should expose a scan-friendly facade. `src/lib.rs`
+is for crate documentation, module declarations, curated public re-exports, and
+small top-level convenience. It should not contain the entire runtime
+implementation.
+
+Internal modules follow responsibility, not a universal file template.
+Semantic models, runtime values, concrete realizations, protocol/codec
+machinery, authoring helpers, and inspection behavior should be separated when
+that improves ownership and change locality. Proof-only Components and
+multi-occurrence witnesses belong in tests, not production API. Realization
+machinery such as OS sockets, background threads, or lifecycle state should be
+isolated from the semantic facade.
+
+Integration tests that build Fabric Compositions, materialize Instances, open
+real files/sockets/processes, or exercise lifecycle belong in package `tests/`
+unless they are truly local unit tests. Each serious package README should
+state purpose, semantic boundary, public surface, realization/lifecycle facts,
+extension path, and non-goals.
+
 ### Reserved Capability Pressure
 
 The foundation is intentionally breadth-first, not exhaustive.
@@ -449,7 +470,7 @@ packages/networking/http
 ```
 
 It contributes one named TCP Resource occurrence, the existing
-`TcpTransportProbe` for runtime address discovery, and the existing
+`TcpTransportInspector` for runtime address discovery, and the existing
 `HttpServer` Component. The resulting `fabric::Composition` contains ordinary
 Fabric Resources, Components, relations, realization, and config only.
 

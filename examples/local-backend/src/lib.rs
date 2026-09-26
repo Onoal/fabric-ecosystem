@@ -10,7 +10,7 @@ use fabric::prelude::*;
 use fabric_composition_local_backend::{local_backend_stack, LocalBackendCompositionConfig};
 use fabric_package_networking_http::{HttpResponse, HttpServer, HttpServerInstanceApi};
 use fabric_package_networking_tcp::{
-    TcpSocketAddress, TcpTransportProbe, TcpTransportProbeInstanceApi,
+    TcpSocketAddress, TcpTransportInspector, TcpTransportInspectorInstanceApi,
 };
 use fabric_package_observability_logging::{LogRecord, LogSink};
 use fabric_package_relational_database::{RelationalDatabase, RelationalValue};
@@ -112,9 +112,9 @@ pub fn run() -> Result<ExampleBackendResult, Box<dyn std::error::Error>> {
     let app = instance.component::<ExampleBackendApp>()?;
     app.reconcile()?;
     let mut result = block_on(app.write_read_log("local-data".to_owned()))??;
-    let probe = instance.component::<TcpTransportProbe>()?;
-    probe.reconcile()?;
-    let address = block_on(probe.observe_transport())?
+    let inspector = instance.component::<TcpTransportInspector>()?;
+    inspector.reconcile()?;
+    let address = block_on(inspector.inspect_transport())?
         .actual
         .ok_or("local backend did not bind a TCP address")?;
     let server = instance.component::<HttpServer>()?;

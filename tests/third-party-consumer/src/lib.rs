@@ -4,7 +4,7 @@ use fabric::prelude::*;
 use fabric_package_key_value::KeyValue;
 use fabric_package_messaging_queue::{FifoQueue, QueueMessage, QueueSendResult};
 use fabric_package_networking_tcp::{
-    TcpByteStreamTransport, TcpConnectResult, TcpProbeObservation, TcpTransportError,
+    TcpByteStreamTransport, TcpConnectResult, TcpTransportError, TcpTransportInspection,
 };
 use fabric_package_observability_counter::{CounterMetric, DualCounterSnapshot};
 use fabric_package_observability_logging::{LogRecord, LogSink};
@@ -21,7 +21,7 @@ pub struct ConsumerOutput {
     pub environment: ExecutionEnvironment,
     pub message_send: QueueSendResult,
     pub message: Option<QueueMessage>,
-    pub transport_observation: TcpProbeObservation,
+    pub transport_observation: TcpTransportInspection,
     pub transport_connect: Result<(), TcpTransportError>,
     pub signed: SignedPayload,
     pub signature_valid: bool,
@@ -76,7 +76,7 @@ fabric::component! {
                     }
                 }
                 let message = self.relations().queue.try_receive();
-                let transport_observation = TcpProbeObservation {
+                let transport_observation = TcpTransportInspection {
                     requested: self.relations().transport.requested_bind_address(),
                     actual: self.relations().transport.actual_bound_address(),
                     accepted_connections: self.relations().transport.accepted_connections(),
@@ -255,7 +255,7 @@ mod tests {
         QueueConsumerInstanceApi, QueueProducer, QueueProducerInstanceApi,
     };
     use fabric_package_networking_http::{HttpResponse, HttpServer, HttpServerInstanceApi};
-    use fabric_package_networking_tcp::{TcpTransportProbe, TcpTransportProbeInstanceApi};
+    use fabric_package_networking_tcp::{TcpTransportInspector, TcpTransportInspectorInstanceApi};
     use futures::executor::block_on;
     use std::io::{Read, Write};
     use std::net::{Shutdown, SocketAddr, TcpStream};
@@ -549,13 +549,13 @@ mod tests {
             .expect("instance");
         instance.start().expect("start");
 
-        let probe = instance
-            .component::<TcpTransportProbe>()
-            .expect("transport probe");
-        probe.reconcile().expect("probe reconcile");
+        let inspector = instance
+            .component::<TcpTransportInspector>()
+            .expect("transport inspector");
+        inspector.reconcile().expect("inspector reconcile");
         let server = instance.component::<HttpServer>().expect("http server");
         server.reconcile().expect("server reconcile");
-        let address = block_on(probe.observe_transport())
+        let address = block_on(inspector.inspect_transport())
             .expect("observe transport")
             .actual
             .expect("bound TCP address");
@@ -632,13 +632,13 @@ mod tests {
             .expect("instance");
         instance.start().expect("start");
 
-        let probe = instance
-            .component::<TcpTransportProbe>()
-            .expect("transport probe");
-        probe.reconcile().expect("probe reconcile");
+        let inspector = instance
+            .component::<TcpTransportInspector>()
+            .expect("transport inspector");
+        inspector.reconcile().expect("inspector reconcile");
         let server = instance.component::<HttpServer>().expect("http server");
         server.reconcile().expect("server reconcile");
-        let address = block_on(probe.observe_transport())
+        let address = block_on(inspector.inspect_transport())
             .expect("observe transport")
             .actual
             .expect("bound TCP address");

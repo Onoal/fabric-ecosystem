@@ -79,7 +79,8 @@ mod tests {
     use super::*;
     use fabric_package_networking_http::{HttpResponse, HttpServer, HttpServerInstanceApi};
     use fabric_package_networking_tcp::{
-        TcpProbeObservation, TcpSocketAddress, TcpTransportProbe, TcpTransportProbeInstanceApi,
+        TcpSocketAddress, TcpTransportInspection, TcpTransportInspector,
+        TcpTransportInspectorInstanceApi,
     };
     use fabric_package_observability_logging::{LogRecord, LogSink};
     use fabric_package_relational_database::{
@@ -209,9 +210,9 @@ mod tests {
         component
     }
 
-    fn actual_address(probe: &BoundComponent<'_, TcpTransportProbe>) -> TcpSocketAddress {
-        let observation: TcpProbeObservation =
-            block_on(probe.observe_transport()).expect("observe");
+    fn actual_address(inspector: &BoundComponent<'_, TcpTransportInspector>) -> TcpSocketAddress {
+        let observation: TcpTransportInspection =
+            block_on(inspector.inspect_transport()).expect("observe");
         observation.actual.expect("actual address")
     }
 
@@ -284,7 +285,7 @@ mod tests {
         assert!(composition
             .components()
             .any(|component| component.component_id().as_str()
-                == "onoal.package.networking.tcp.probe"));
+                == "onoal.package.networking.tcp.inspector"));
         assert!(composition
             .components()
             .any(|component| component.component_id().as_str()
@@ -334,9 +335,9 @@ mod tests {
             &composition,
             "onoal.composition.test.local-backend.http.instance",
         );
-        let probe = activate::<TcpTransportProbe>(&instance);
+        let inspector = activate::<TcpTransportInspector>(&instance);
         let server = activate::<HttpServer>(&instance);
-        let address = actual_address(&probe);
+        let address = actual_address(&inspector);
         let client = http_client(address, "/backend");
 
         let request =
@@ -423,14 +424,14 @@ mod tests {
             &composition,
             "onoal.composition.test.local-backend.http-app.instance",
         );
-        let probe = activate::<TcpTransportProbe>(&instance);
+        let inspector = activate::<TcpTransportInspector>(&instance);
         let server = activate::<HttpServer>(&instance);
         let app = activate::<TestLocalBackendApp>(&instance);
         let app_result = block_on(app.write_read_log("response-from-db".to_owned()))
             .expect("app")
             .expect("result");
         let body = app_result.value.expect("value").into_bytes();
-        let address = actual_address(&probe);
+        let address = actual_address(&inspector);
         let client = http_client(address, "/from-app");
 
         let request = block_on(server.serve_once(HttpResponse::new(200, body)))
@@ -465,7 +466,7 @@ mod tests {
 
         assert!(
             result.is_err(),
-            "Fabric v1 Component definition identity prevents two HttpServer/TcpTransportProbe occurrences"
+            "Fabric v1 Component definition identity prevents two HttpServer/TcpTransportInspector occurrences"
         );
         let _ = std::fs::remove_file(first);
         let _ = std::fs::remove_file(second);

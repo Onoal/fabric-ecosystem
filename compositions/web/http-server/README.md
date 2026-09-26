@@ -8,7 +8,7 @@ system from existing packages:
 TcpByteStreamTransport
     realized by LoopbackTcpByteStream
         |
-        +-- TcpTransportProbe
+        +-- TcpTransportInspector
         `-- HttpServer
 ```
 
@@ -28,7 +28,7 @@ compositions/web/http-server
 ```
 
 The local default binds loopback `127.0.0.1:0`. The actual bound address is
-runtime truth and remains discoverable through `TcpTransportProbe`; this
+runtime truth and remains discoverable through `TcpTransportInspector`; this
 Composition does not invent a second address-inspection mechanism.
 
 Fabric v1 Component identity is definition-scoped, so this first assembly

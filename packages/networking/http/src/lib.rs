@@ -373,8 +373,8 @@ fn default_reason_phrase(status_code: u16) -> &'static str {
 mod tests {
     use super::*;
     use fabric_package_networking_tcp::{
-        loopback_tcp_transport, tcp_transport_probe, TcpProbeObservation, TcpTransportProbe,
-        TcpTransportProbeInstanceApi,
+        loopback_tcp_transport, tcp_transport_inspector, TcpTransportInspection,
+        TcpTransportInspector, TcpTransportInspectorInstanceApi,
     };
     use futures::executor::block_on;
     use std::io::{Read, Write};
@@ -385,7 +385,7 @@ mod tests {
         Fabric::new(id)
             .expect("fabric")
             .with(loopback_tcp_transport("api"))
-            .with(tcp_transport_probe("api"))
+            .with(tcp_transport_inspector("api"))
             .with(http_server("api"))
             .build()
             .expect("composition")
@@ -407,9 +407,9 @@ mod tests {
         component
     }
 
-    fn actual_address(probe: &BoundComponent<'_, TcpTransportProbe>) -> TcpSocketAddress {
-        let observation: TcpProbeObservation =
-            block_on(probe.observe_transport()).expect("observe");
+    fn actual_address(inspector: &BoundComponent<'_, TcpTransportInspector>) -> TcpSocketAddress {
+        let observation: TcpTransportInspection =
+            block_on(inspector.inspect_transport()).expect("observe");
         observation.actual.expect("actual address")
     }
 
@@ -431,9 +431,9 @@ mod tests {
     fn get_request_and_response_work_over_real_tcp() {
         let composition = composition("onoal.package.test.http.get");
         let instance = started_instance(&composition, "onoal.package.test.http.get.instance");
-        let probe = activate::<TcpTransportProbe>(&instance);
+        let inspector = activate::<TcpTransportInspector>(&instance);
         let server = activate::<HttpServer>(&instance);
-        let address = actual_address(&probe);
+        let address = actual_address(&inspector);
         let client = thread::spawn(move || {
             client_exchange(
                 address,
@@ -473,9 +473,9 @@ mod tests {
     fn post_body_is_read_without_client_eof_before_response() {
         let composition = composition("onoal.package.test.http.post");
         let instance = started_instance(&composition, "onoal.package.test.http.post.instance");
-        let probe = activate::<TcpTransportProbe>(&instance);
+        let inspector = activate::<TcpTransportInspector>(&instance);
         let server = activate::<HttpServer>(&instance);
-        let address = actual_address(&probe);
+        let address = actual_address(&inspector);
         let (response_read_tx, response_read_rx) = std::sync::mpsc::channel();
         let client = thread::spawn(move || {
             let socket: SocketAddr = format!("{}:{}", address.host, address.port)
@@ -516,9 +516,9 @@ mod tests {
     fn malformed_request_returns_bounded_error() {
         let composition = composition("onoal.package.test.http.malformed");
         let instance = started_instance(&composition, "onoal.package.test.http.malformed.instance");
-        let probe = activate::<TcpTransportProbe>(&instance);
+        let inspector = activate::<TcpTransportInspector>(&instance);
         let server = activate::<HttpServer>(&instance);
-        let address = actual_address(&probe);
+        let address = actual_address(&inspector);
         let client = thread::spawn(move || client_exchange(address, b"not http\r\n\r\n".to_vec()));
 
         let result = block_on(server.serve_once(HttpResponse::new(200, b"unused".to_vec())))
@@ -537,9 +537,9 @@ mod tests {
     fn request_size_bound_is_enforced() {
         let composition = composition("onoal.package.test.http.bounds");
         let instance = started_instance(&composition, "onoal.package.test.http.bounds.instance");
-        let probe = activate::<TcpTransportProbe>(&instance);
+        let inspector = activate::<TcpTransportInspector>(&instance);
         let server = activate::<HttpServer>(&instance);
-        let address = actual_address(&probe);
+        let address = actual_address(&inspector);
         let oversized = format!(
             "POST /too-large HTTP/1.1\r\nHost: example.test\r\nContent-Length: {}\r\n\r\n",
             DEFAULT_MAX_BODY_BYTES + 1
