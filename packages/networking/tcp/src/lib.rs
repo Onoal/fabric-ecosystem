@@ -139,6 +139,25 @@ impl TcpConnection {
         Ok(bytes)
     }
 
+    pub fn read_some(&self, max_bytes: usize) -> Result<Vec<u8>, TcpTransportError> {
+        self.ensure_live()?;
+        if max_bytes == 0 {
+            return Ok(Vec::new());
+        }
+        let mut bytes = vec![0; max_bytes];
+        let count = self
+            .stream
+            .lock()
+            .expect("tcp connection")
+            .read(&mut bytes)
+            .map_err(|error| TcpTransportError {
+                kind: TcpTransportErrorKind::ReadFailed,
+                detail: error.to_string(),
+            })?;
+        bytes.truncate(count);
+        Ok(bytes)
+    }
+
     pub fn shutdown_write(&self) -> Result<(), TcpTransportError> {
         self.ensure_live()?;
         self.stream
@@ -580,6 +599,33 @@ mod tests {
         }
     }
 
+    fabric::component! {
+        TestIncrementalReader {
+            id: "onoal.package.networking.tcp.test-incremental-reader";
+
+            relations {
+                requires {
+                    transport: TcpByteStreamTransport;
+                }
+            }
+
+            api {
+                fn read_first_bytes(&self, max_bytes: usize) -> Result<Vec<u8>, TcpTransportError>;
+            }
+
+            runtime {
+                fn read_first_bytes(&self, max_bytes: usize) -> Result<Vec<u8>, TcpTransportError> {
+                    let connection = match self.relations().transport.accept() {
+                        TcpAcceptResult::Accepted(connection) => connection,
+                        TcpAcceptResult::Stopped => return Err(TcpTransportError::stopped()),
+                        TcpAcceptResult::Failed(error) => return Err(error),
+                    };
+                    connection.read_some(max_bytes)
+                }
+            }
+        }
+    }
+
     fn composition(id: &str) -> Composition {
         let transport = TcpByteStreamTransport::select("api").expect("transport selection");
         let echo = TestEchoServer::define().select_named_resource_provider(
@@ -595,6 +641,25 @@ mod tests {
             .with(loopback_tcp_transport("api"))
             .with(tcp_transport_probe("api"))
             .component(echo)
+            .build()
+            .expect("composition")
+    }
+
+    fn incremental_composition(id: &str) -> Composition {
+        let transport = TcpByteStreamTransport::select("api").expect("transport selection");
+        let reader = TestIncrementalReader::define().select_named_resource_provider(
+            &fabric::authoring::ComponentResourceRequirement::new(
+                fabric::component::ComponentRelationName::new("transport").expect("role"),
+                fabric::authoring::Requires::<TcpByteStreamTransport>::provisional(),
+            ),
+            &transport,
+        );
+
+        Fabric::new(id)
+            .expect("fabric")
+            .with(loopback_tcp_transport("api"))
+            .with(tcp_transport_probe("api"))
+            .component(reader)
             .build()
             .expect("composition")
     }
@@ -727,6 +792,33 @@ mod tests {
             Ok(b"handle-bytes".len())
         );
         assert_eq!(connection.read_to_end().expect("read"), b"handle-bytes");
+    }
+
+    #[test]
+    fn incremental_read_returns_bytes_without_waiting_for_peer_eof() {
+        let composition = incremental_composition("onoal.package.test.network.incremental");
+        let instance = started_instance(
+            &composition,
+            "onoal.package.test.network.incremental.instance",
+        );
+        let probe = activate::<TcpTransportProbe>(&instance);
+        let reader = activate::<TestIncrementalReader>(&instance);
+        let actual = block_on(probe.observe_transport())
+            .expect("observe")
+            .actual
+            .expect("address");
+        let (read_complete_tx, read_complete_rx) = std::sync::mpsc::channel();
+        let client = thread::spawn(move || {
+            let socket = actual.parse().expect("socket addr");
+            let mut stream = TcpStream::connect(socket).expect("tcp client connect");
+            stream.write_all(b"partial-before-eof").expect("write");
+            read_complete_rx.recv().expect("read completion");
+        });
+
+        let bytes = block_on(reader.read_first_bytes(7)).expect("read_some");
+        assert_eq!(bytes, Ok(b"partial".to_vec()));
+        read_complete_tx.send(()).expect("notify client");
+        client.join().expect("client");
     }
 
     #[test]

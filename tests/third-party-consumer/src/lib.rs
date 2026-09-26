@@ -242,8 +242,15 @@ pub fn application() -> impl IntoFabricContribution {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use fabric_package_networking_http::{
+        http_server, HttpResponse, HttpServer, HttpServerInstanceApi,
+    };
+    use fabric_package_networking_tcp::{TcpTransportProbe, TcpTransportProbeInstanceApi};
     use futures::executor::block_on;
+    use std::io::{Read, Write};
+    use std::net::{Shutdown, SocketAddr, TcpStream};
     use std::path::PathBuf;
+    use std::thread;
     use std::time::{SystemTime, UNIX_EPOCH};
 
     fn unique_sqlite_path() -> PathBuf {
@@ -398,5 +405,60 @@ mod tests {
         );
         assert_eq!(output.logged.target.as_deref(), Some("third-party"));
         let _ = std::fs::remove_file(database_path);
+    }
+
+    #[test]
+    fn third_party_consumer_uses_http_server_over_public_tcp_package() {
+        #[cfg(target_os = "linux")]
+        let host = fabric_host_linux::detect_linux_host().expect("linux host detection");
+        #[cfg(not(target_os = "linux"))]
+        let host = HostDescriptor::native();
+
+        let composition = Fabric::new("onoal.package.test.third-party.http")
+            .expect("fabric")
+            .with(fabric_package_networking_tcp::loopback_tcp_transport("api"))
+            .with(fabric_package_networking_tcp::tcp_transport_probe("api"))
+            .with(http_server("api"))
+            .build()
+            .expect("composition");
+        let mut instance = composition
+            .materialize_on("onoal.package.test.third-party.http.instance", &host)
+            .expect("instance");
+        instance.start().expect("start");
+
+        let probe = instance
+            .component::<TcpTransportProbe>()
+            .expect("transport probe");
+        probe.reconcile().expect("probe reconcile");
+        let server = instance.component::<HttpServer>().expect("http server");
+        server.reconcile().expect("server reconcile");
+        let address = block_on(probe.observe_transport())
+            .expect("observe transport")
+            .actual
+            .expect("bound TCP address");
+        let client = thread::spawn(move || {
+            let socket: SocketAddr = format!("{}:{}", address.host, address.port)
+                .parse()
+                .expect("socket addr");
+            let mut stream = TcpStream::connect(socket).expect("client connect");
+            stream
+                .write_all(b"GET /third-party HTTP/1.1\r\nHost: consumer.test\r\n\r\n")
+                .expect("write request");
+            stream.shutdown(Shutdown::Write).expect("shutdown write");
+            let mut response = Vec::new();
+            stream.read_to_end(&mut response).expect("read response");
+            response
+        });
+
+        let request =
+            block_on(server.serve_once(HttpResponse::new(200, b"third-party-http".to_vec())))
+                .expect("serve")
+                .expect("request");
+        let response = String::from_utf8(client.join().expect("client")).expect("response utf8");
+
+        assert_eq!(request.method, "GET");
+        assert_eq!(request.target, "/third-party");
+        assert!(response.starts_with("HTTP/1.1 200 OK\r\n"));
+        assert!(response.ends_with("\r\n\r\nthird-party-http"));
     }
 }

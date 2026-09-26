@@ -32,6 +32,8 @@ Fabric Ecosystem
   in-memory live state and producer/consumer component witnesses.
 - `packages/networking/tcp`: a loopback TCP byte-stream transport capability with real
   OS bind/connect/accept/read/write behavior and Component probes.
+- `packages/networking/http`: HTTP/1 server behavior layered over the TCP
+  byte-stream capability.
 - `packages/observability/counter`: a monotonic counter metric capability with
   in-memory live telemetry state and instrumentation Component witnesses.
 - `packages/observability/logging`: a semantic LogSink capability with a local

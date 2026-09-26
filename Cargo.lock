@@ -191,6 +191,7 @@ dependencies = [
  "onoal-fabric-host-linux",
  "onoal-fabric-package-key-value",
  "onoal-fabric-package-messaging-queue",
+ "onoal-fabric-package-networking-http",
  "onoal-fabric-package-networking-tcp",
  "onoal-fabric-package-observability-counter",
  "onoal-fabric-package-observability-logging",
@@ -358,6 +359,12 @@ dependencies = [
 ]
 
 [[package]]
+name = "httparse"
+version = "1.10.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "6dbf3de79e51f3d586ab4cb9d5c3e2c14aa28ed23d180cf89b4df0454a69cc87"
+
+[[package]]
 name = "indexmap"
 version = "2.14.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -463,6 +470,16 @@ version = "0.1.0"
 dependencies = [
  "futures",
  "onoal-fabric",
+]
+
+[[package]]
+name = "onoal-fabric-package-networking-http"
+version = "0.1.0"
+dependencies = [
+ "futures",
+ "httparse",
+ "onoal-fabric",
+ "onoal-fabric-package-networking-tcp",
 ]
 
 [[package]]

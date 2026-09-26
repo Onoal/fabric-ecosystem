@@ -81,6 +81,9 @@ Packages are grouped by capability ownership:
   FIFO queue.
 - `packages/networking/tcp` owns the first network/transport capability:
   loopback TCP byte streams.
+- `packages/networking/http` owns HTTP/1 server behavior over the TCP package.
+  It proves one package can consume another package's semantic capability
+  without merging their ownership.
 - `packages/observability/counter` owns the first observability capability:
   monotonic counter metrics.
 - `packages/observability/logging` owns semantic logging: explicit log records
@@ -199,7 +202,8 @@ The model is intentionally technical and bounded:
   accepted-connection delivery. It does not own echo or request/response
   behavior.
 - A connection exposes bounded read, write, and shutdown operations as live
-  runtime value behavior.
+  runtime value behavior, including incremental reads for stream protocols that
+  cannot wait for peer EOF.
 - Behavioral Components or applications may implement echo on top of the
   transport by accepting a connection, reading bytes, and writing bytes.
 - The adapter owns a background accept loop internally and releases it during
@@ -212,6 +216,22 @@ TCP model avoids `Exchange` vocabulary. A future OXP adapter may use this kind
 of transport, but transport bytes are not OXP exchange semantics. TLS,
 certificates, DNS, hostnames, URI/Locator models, and remote identity/authority
 remain future separate capability pressure.
+
+### HTTP/1 Server Behavior
+
+`packages/networking/http` establishes `HttpServer`, a behavioral Component
+that requires a named `TcpByteStreamTransport`. TCP owns bytes and connection
+state; HTTP owns request parsing and response serialization.
+
+The first behavior accepts one TCP connection, parses one HTTP/1 request,
+writes one HTTP/1 response, and closes the exchange. Request and response
+types are package-owned, parser implementation types are not public API, and
+the package enforces explicit request-head and request-body bounds.
+
+This slice deliberately does not introduce routing, middleware, TLS, HTTP/2,
+HTTP/3, WebSockets, logging integration, database access, or reusable
+Compositions. Those can be layered later without changing the TCP transport
+semantics.
 
 ### Ed25519 Signing
 
@@ -386,8 +406,7 @@ Its defining property is coherent assembled system truth.
 Illustrative future classification:
 
 - `packages/networking/tcp`: reusable TCP capability.
-- `packages/networking/http`: possible future reusable HTTP protocol
-  capability if earned.
+- `packages/networking/http`: reusable HTTP/1 protocol behavior over TCP.
 - `compositions/servers/http-server`: possible future complete HTTP-serving
   system.
 - `packages/data/...`: reusable storage/data capabilities.

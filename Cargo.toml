@@ -8,6 +8,7 @@ members = [
     "packages/data/sqlite",
     "packages/execution/process-runtime",
     "packages/messaging/queue",
+    "packages/networking/http",
     "packages/networking/tcp",
     "packages/observability/counter",
     "packages/observability/logging",
@@ -30,10 +31,12 @@ fabric-package-key-value = { package = "onoal-fabric-package-key-value", version
 fabric-package-relational-database = { package = "onoal-fabric-package-relational-database", version = "0.1.0", path = "packages/data/relational-database" }
 fabric-package-sqlite = { package = "onoal-fabric-package-sqlite", version = "0.1.0", path = "packages/data/sqlite" }
 fabric-package-messaging-queue = { package = "onoal-fabric-package-messaging-queue", version = "0.1.0", path = "packages/messaging/queue" }
+fabric-package-networking-http = { package = "onoal-fabric-package-networking-http", version = "0.1.0", path = "packages/networking/http" }
 fabric-package-networking-tcp = { package = "onoal-fabric-package-networking-tcp", version = "0.1.0", path = "packages/networking/tcp" }
 fabric-package-observability-counter = { package = "onoal-fabric-package-observability-counter", version = "0.1.0", path = "packages/observability/counter" }
 fabric-package-observability-logging = { package = "onoal-fabric-package-observability-logging", version = "0.1.0", path = "packages/observability/logging" }
 fabric-package-process-runtime = { package = "onoal-fabric-package-process-runtime", version = "0.1.0", path = "packages/execution/process-runtime" }
 fabric-package-security-ed25519 = { package = "onoal-fabric-package-security-ed25519", version = "0.1.0", path = "packages/security/ed25519" }
 futures = "0.3"
+httparse = "1"
 rusqlite = { version = "0.32", features = ["bundled"] }
