@@ -313,8 +313,9 @@ checksum = "cf8baf1c55e62ffcace7a9f06f4bd9cd3f0c4beb022d3b367256b91b87513d98"
 
 [[package]]
 name = "onoal-fabric"
-version = "0.7.0"
-source = "git+https://github.com/Onoal/fabric.git?rev=ac43a1b3353990995ac7a7e1803a3da9cd4d24d0#ac43a1b3353990995ac7a7e1803a3da9cd4d24d0"
+version = "1.0.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "a572363833bdaaa9c37903e17e802c29ac10a91c9842209156be3aab943abb84"
 dependencies = [
  "onoal-fabric-component",
  "onoal-fabric-core",
@@ -327,8 +328,9 @@ dependencies = [
 
 [[package]]
 name = "onoal-fabric-component"
-version = "0.7.0"
-source = "git+https://github.com/Onoal/fabric.git?rev=ac43a1b3353990995ac7a7e1803a3da9cd4d24d0#ac43a1b3353990995ac7a7e1803a3da9cd4d24d0"
+version = "1.0.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "169e836fc4fedb6ae31fe5cba80ca5d27982d1c31c6147ffdd98b7bf4b71ea51"
 dependencies = [
  "onoal-fabric-core",
  "onoal-fabric-resource",
@@ -337,8 +339,9 @@ dependencies = [
 
 [[package]]
 name = "onoal-fabric-core"
-version = "0.7.0"
-source = "git+https://github.com/Onoal/fabric.git?rev=ac43a1b3353990995ac7a7e1803a3da9cd4d24d0#ac43a1b3353990995ac7a7e1803a3da9cd4d24d0"
+version = "1.0.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "f86115437ae7be52d27a3916ffe84a249ca01658874c22f90f513a76f3f63357"
 dependencies = [
  "onoal-fabric-host",
  "semver",
@@ -347,8 +350,9 @@ dependencies = [
 
 [[package]]
 name = "onoal-fabric-host"
-version = "0.7.0"
-source = "git+https://github.com/Onoal/fabric.git?rev=ac43a1b3353990995ac7a7e1803a3da9cd4d24d0#ac43a1b3353990995ac7a7e1803a3da9cd4d24d0"
+version = "1.0.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "b40de4f4008aa184be6330b982b8f09e8f8276d04236963c0a458d10e6fcec3a"
 dependencies = [
  "thiserror",
 ]
@@ -406,8 +410,9 @@ dependencies = [
 
 [[package]]
 name = "onoal-fabric-resource"
-version = "0.7.0"
-source = "git+https://github.com/Onoal/fabric.git?rev=ac43a1b3353990995ac7a7e1803a3da9cd4d24d0#ac43a1b3353990995ac7a7e1803a3da9cd4d24d0"
+version = "1.0.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "a02e7399d99f73e1235ce61a4f89617b8f8cd78469ea0d66db18c182f558c497"
 dependencies = [
  "semver",
  "sha2",
@@ -416,8 +421,9 @@ dependencies = [
 
 [[package]]
 name = "onoal-fabric-sdk-macros"
-version = "0.7.0"
-source = "git+https://github.com/Onoal/fabric.git?rev=ac43a1b3353990995ac7a7e1803a3da9cd4d24d0#ac43a1b3353990995ac7a7e1803a3da9cd4d24d0"
+version = "1.0.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "26f0150c6177ef381bf180decb01b95e7df945e062b0a5320ed85210a38fca0f"
 dependencies = [
  "proc-macro-crate",
  "proc-macro2",
@@ -428,8 +434,9 @@ dependencies = [
 
 [[package]]
 name = "onoal-fabric-system"
-version = "0.7.0"
-source = "git+https://github.com/Onoal/fabric.git?rev=ac43a1b3353990995ac7a7e1803a3da9cd4d24d0#ac43a1b3353990995ac7a7e1803a3da9cd4d24d0"
+version = "1.0.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "6cd7540afe417da0a8b4c50be63981059f9a05ecfd9120d091158d334eb5fd8f"
 dependencies = [
  "semver",
  "thiserror",

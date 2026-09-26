@@ -20,7 +20,7 @@ repository = "https://github.com/Onoal/fabric-ecosystem"
 version = "0.1.0"
 
 [workspace.dependencies]
-fabric = { package = "onoal-fabric", git = "https://github.com/Onoal/fabric.git", rev = "ac43a1b3353990995ac7a7e1803a3da9cd4d24d0" }
+fabric = { package = "onoal-fabric", version = "1.0.0" }
 fabric-package-key-value = { package = "onoal-fabric-package-key-value", version = "0.1.0", path = "packages/data/key-value" }
 fabric-package-messaging-queue = { package = "onoal-fabric-package-messaging-queue", version = "0.1.0", path = "packages/messaging/queue" }
 fabric-package-networking-tcp = { package = "onoal-fabric-package-networking-tcp", version = "0.1.0", path = "packages/networking/tcp" }

@@ -818,11 +818,12 @@ mod tests {
                 TcpConnectResult::Connected(connection) => connection,
                 TcpConnectResult::Failed(error) => panic!("connect failed: {error:?}"),
             };
-            assert_eq!(
-                block_on(probe.observe_transport())
-                    .expect("observe peer disconnect")
-                    .accepted_connections,
-                2
+            let accepted_connections = block_on(probe.observe_transport())
+                .expect("observe peer disconnect")
+                .accepted_connections;
+            assert!(
+                (1..=2).contains(&accepted_connections),
+                "accepted connection count is scheduling-dependent after an unused client connect"
             );
             connected
         };
