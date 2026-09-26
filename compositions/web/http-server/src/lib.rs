@@ -185,14 +185,16 @@ mod tests {
         let address = actual_address(&inspector);
         let client = http_client(address, "/composition");
 
-        let request = block_on(
-            server.serve_once(
-                HttpResponse::new(200, b"composition-http".to_vec())
+        let exchange = block_on(server.accept_exchange())
+            .expect("accept")
+            .expect("exchange");
+        let request = exchange.request().clone();
+        exchange
+            .respond(
+                HttpResponse::new(200, format!("composition:{}", request.target).into_bytes())
                     .with_header("X-Composition", "http-server"),
-            ),
-        )
-        .expect("serve")
-        .expect("request");
+            )
+            .expect("respond");
         let response = client.join().expect("client");
 
         assert_eq!(request.method, "GET");
@@ -200,7 +202,7 @@ mod tests {
         assert_eq!(request.version, HttpVersion::Http11);
         assert!(response.starts_with("HTTP/1.1 200 OK\r\n"));
         assert!(response.contains("X-Composition: http-server\r\n"));
-        assert!(response.ends_with("\r\n\r\ncomposition-http"));
+        assert!(response.ends_with("\r\n\r\ncomposition:/composition"));
     }
 
     #[test]

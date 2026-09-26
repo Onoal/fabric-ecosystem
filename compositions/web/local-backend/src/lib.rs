@@ -340,15 +340,21 @@ mod tests {
         let address = actual_address(&inspector);
         let client = http_client(address, "/backend");
 
-        let request =
-            block_on(server.serve_once(HttpResponse::new(200, b"local-backend".to_vec())))
-                .expect("serve")
-                .expect("request");
+        let exchange = block_on(server.accept_exchange())
+            .expect("accept")
+            .expect("exchange");
+        let request = exchange.request().clone();
+        exchange
+            .respond(HttpResponse::new(
+                200,
+                format!("local-backend:{}", request.target).into_bytes(),
+            ))
+            .expect("respond");
         let response = client.join().expect("client");
 
         assert_eq!(request.target, "/backend");
         assert!(response.starts_with("HTTP/1.1 200 OK\r\n"));
-        assert!(response.ends_with("\r\n\r\nlocal-backend"));
+        assert!(response.ends_with("\r\n\r\nlocal-backend:/backend"));
         let _ = std::fs::remove_file(path);
     }
 
@@ -427,20 +433,24 @@ mod tests {
         let inspector = activate::<TcpTransportInspector>(&instance);
         let server = activate::<HttpServer>(&instance);
         let app = activate::<TestLocalBackendApp>(&instance);
-        let app_result = block_on(app.write_read_log("response-from-db".to_owned()))
-            .expect("app")
-            .expect("result");
-        let body = app_result.value.expect("value").into_bytes();
         let address = actual_address(&inspector);
         let client = http_client(address, "/from-app");
 
-        let request = block_on(server.serve_once(HttpResponse::new(200, body)))
-            .expect("serve")
-            .expect("request");
+        let exchange = block_on(server.accept_exchange())
+            .expect("accept")
+            .expect("exchange");
+        let request = exchange.request().clone();
+        let app_result = block_on(app.write_read_log(format!("response{}", request.target)))
+            .expect("app")
+            .expect("result");
+        let body = app_result.value.expect("value").into_bytes();
+        exchange
+            .respond(HttpResponse::new(200, body))
+            .expect("respond");
         let response = client.join().expect("client");
 
         assert_eq!(request.target, "/from-app");
-        assert!(response.ends_with("\r\n\r\nresponse-from-db"));
+        assert!(response.ends_with("\r\n\r\nresponse/from-app"));
         let _ = std::fs::remove_file(path);
     }
 

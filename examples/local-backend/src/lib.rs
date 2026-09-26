@@ -120,8 +120,10 @@ pub fn run() -> Result<ExampleBackendResult, Box<dyn std::error::Error>> {
     let server = instance.component::<HttpServer>()?;
     server.reconcile()?;
     let client = http_client(address);
-    let _ =
-        block_on(server.serve_once(HttpResponse::new(200, result.stored.clone().into_bytes())))??;
+    let exchange = block_on(server.accept_exchange())??;
+    let request_target = exchange.request().target.clone();
+    result.stored = format!("{} via {}", result.stored, request_target);
+    exchange.respond(HttpResponse::new(200, result.stored.clone().into_bytes()))?;
     result.http_response = client.join().expect("client");
 
     instance.stop()?;
@@ -163,11 +165,13 @@ mod tests {
     #[test]
     fn example_extends_local_backend_foundation_with_application_behavior() {
         let result = run().expect("example");
-        assert_eq!(result.stored, "local-data");
+        assert_eq!(result.stored, "local-data via /local-backend");
         assert_eq!(
             result.logged.target.as_deref(),
             Some("local-backend-example")
         );
-        assert!(result.http_response.ends_with("\r\n\r\nlocal-data"));
+        assert!(result
+            .http_response
+            .ends_with("\r\n\r\nlocal-data via /local-backend"));
     }
 }

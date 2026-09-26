@@ -466,7 +466,7 @@ packages/networking/tcp
     TCP capability and loopback realization
 
 packages/networking/http
-    HTTP behavior Component
+    HTTP behavior Component and request/response exchange
 ```
 
 It contributes one named TCP Resource occurrence, the existing
@@ -475,6 +475,9 @@ It contributes one named TCP Resource occurrence, the existing
 Fabric Resources, Components, relations, realization, and config only.
 The inspector observes live facts only; TCP connect/accept behavior remains on
 the `TcpByteStreamTransport` Resource.
+HTTP application behavior selects responses after `HttpServer` returns an
+`HttpExchange`; the Composition does not introduce routing, callbacks, or a web
+framework.
 
 Current Fabric v1 Component identity is definition-scoped. The HTTP server
 Composition therefore supports one `HttpServer` Component definition occurrence

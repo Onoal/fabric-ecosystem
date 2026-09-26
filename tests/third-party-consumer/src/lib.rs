@@ -573,16 +573,22 @@ mod tests {
             response
         });
 
-        let request =
-            block_on(server.serve_once(HttpResponse::new(200, b"third-party-http".to_vec())))
-                .expect("serve")
-                .expect("request");
+        let exchange = block_on(server.accept_exchange())
+            .expect("accept")
+            .expect("exchange");
+        let request = exchange.request().clone();
+        exchange
+            .respond(HttpResponse::new(
+                200,
+                format!("third-party:{}", request.target).into_bytes(),
+            ))
+            .expect("respond");
         let response = String::from_utf8(client.join().expect("client")).expect("response utf8");
 
         assert_eq!(request.method, "GET");
         assert_eq!(request.target, "/third-party");
         assert!(response.starts_with("HTTP/1.1 200 OK\r\n"));
-        assert!(response.ends_with("\r\n\r\nthird-party-http"));
+        assert!(response.ends_with("\r\n\r\nthird-party:/third-party"));
     }
 
     #[test]
@@ -656,16 +662,20 @@ mod tests {
             response
         });
 
-        let request = block_on(server.serve_once(HttpResponse::new(
-            200,
-            b"third-party-local-backend".to_vec(),
-        )))
-        .expect("serve")
-        .expect("request");
+        let exchange = block_on(server.accept_exchange())
+            .expect("accept")
+            .expect("exchange");
+        let request = exchange.request().clone();
+        exchange
+            .respond(HttpResponse::new(
+                200,
+                format!("third-party-local-backend:{}", request.target).into_bytes(),
+            ))
+            .expect("respond");
         let response = String::from_utf8(client.join().expect("client")).expect("response utf8");
 
         assert_eq!(request.target, "/local-backend");
-        assert!(response.ends_with("\r\n\r\nthird-party-local-backend"));
+        assert!(response.ends_with("\r\n\r\nthird-party-local-backend:/local-backend"));
         let _ = std::fs::remove_file(database_path);
     }
 

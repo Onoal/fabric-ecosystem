@@ -1,7 +1,7 @@
 # Fabric Package: Networking HTTP
 
-`onoal-fabric-package-networking-http` owns bounded HTTP/1 server behavior over
-the existing TCP byte-stream capability.
+`onoal-fabric-package-networking-http` owns bounded HTTP/1 request/response
+message behavior over the existing TCP byte-stream capability.
 
 ```text
 TCP bytes
@@ -9,33 +9,83 @@ TCP bytes
 HTTP request/response behavior
 ```
 
-`TcpByteStreamTransport` remains the transport Resource. `HttpServer` is a
-behavioral Component that requires a named TCP transport occurrence and performs
-one HTTP exchange:
+## Purpose
 
-```text
-accept one TCP connection
-parse one HTTP/1 request
-write one HTTP/1 response
-close the connection
-return the parsed request
+`TcpByteStreamTransport` remains the transport Resource. `HttpServer` is a
+behavioral Component that requires a named TCP transport occurrence and accepts
+one HTTP exchange per invocation.
+
+Applications choose responses after inspecting requests:
+
+```rust
+let exchange = server.accept_exchange().await??;
+let request = exchange.request();
+let response = choose_response(request);
+exchange.respond(response)?;
 ```
 
-This first server behavior supports HTTP/1.0 and HTTP/1.1 request parsing,
-`Content-Length` request bodies, package-owned request/response/header types,
-and explicit request-size bounds. It does not claim keep-alive, routing,
-middleware, TLS, HTTP/2, HTTP/3, WebSockets, SSE, proxying, authentication,
-authorization, static files, JSON semantics, database access, or logging
-integration.
+`HttpServer` is not a router, framework, callback registry, application
+container, or long-running server loop.
+
+## Architecture
+
+- model: `HttpVersion`, `HttpHeader`, `HttpRequest`, `HttpResponse`
+- server Component: `HttpServer`
+- live exchange: `HttpExchange`
+- codec machinery: internal request decoding and response encoding
+- authoring helper: `http_server("tcp-name")`
+
+`HttpExchange` is one accepted HTTP/1 request/response exchange. It is an
+ordinary runtime value, not a Fabric Resource, Component, or System. It does
+not expose the underlying `TcpConnection`.
+
+## Public Flow
+
+```text
+HttpServer::accept_exchange()
+    accepts one TCP connection
+    decodes one bounded HTTP/1 request
+    returns HttpExchange
+
+HttpExchange::request()
+    exposes the parsed request before response selection
+
+HttpExchange::respond(response)
+    serializes one HTTP/1 response
+    closes the exchange
+```
+
+`respond(self, response)` consumes the exchange, so one exchange commits at
+most one response. Dropping an exchange without responding closes the
+connection; it does not fabricate a `500` or any other application policy.
+
+## Supported Protocol Subset
+
+- HTTP/1.0 and HTTP/1.1 request parsing
+- one request, one response, then close
+- `Content-Length` request bodies
+- package-owned request, response, header, and error types
+- bounded request head and body sizes
 
 The request-head bound is `DEFAULT_MAX_HEAD_BYTES`. The request-body bound is
-`DEFAULT_MAX_BODY_BYTES`. Chunked transfer decoding is intentionally deferred.
+`DEFAULT_MAX_BODY_BYTES`. These are v1 defaults, not universal HTTP policy.
 
-HTTP errors are package-owned. Parser-library types, TCP implementation error
-types, `std::io::Error`, and runtime socket values are not part of the public
-HTTP semantic contract.
+Chunked transfer decoding is intentionally unsupported and returns a bounded
+`UnsupportedTransferEncoding` error.
 
-Typical local authoring:
+## Validation
+
+Response serialization owns `Content-Length`; caller-provided `Content-Length`
+headers do not override the actual body size.
+
+Response header names and values are validated enough to prevent CR/LF header
+injection. Header names are case-insensitive by HTTP semantics, but this
+package does not implement a typed-header framework.
+
+Conflicting request `Content-Length` headers are rejected. Duplicate matching
+values are accepted.
+
+## Authoring
 
 ```rust
 use fabric::prelude::*;
@@ -49,6 +99,24 @@ let composition = Fabric::new("example")?
 # Ok::<(), Box<dyn std::error::Error>>(())
 ```
 
-Future packages or compositions may layer routing, logging, persistence, TLS, or
-application behavior on top. This package deliberately establishes only the
-protocol behavior boundary.
+## Extension Path
+
+Future packages or compositions may layer routing, logging, persistence, TLS,
+handler abstractions, or application behavior on top. This package deliberately
+establishes only the HTTP protocol exchange boundary.
+
+## Non-goals
+
+- routing
+- middleware
+- web framework
+- handler callback registry
+- TLS
+- HTTP/2 or HTTP/3
+- WebSocket or SSE
+- reverse proxying
+- authentication or authorization
+- JSON framework
+- application handlers
+- thread pool
+- async runtime

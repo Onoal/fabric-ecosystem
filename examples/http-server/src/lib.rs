@@ -32,8 +32,12 @@ pub fn run() -> Result<String, Box<dyn std::error::Error>> {
     server.reconcile()?;
     let client = http_client(address);
 
-    let request =
-        block_on(server.serve_once(HttpResponse::new(200, b"hello from composition".to_vec())))??;
+    let exchange = block_on(server.accept_exchange())??;
+    let request = exchange.request().clone();
+    exchange.respond(HttpResponse::new(
+        200,
+        format!("hello from {}", request.target).into_bytes(),
+    ))?;
     let response = client.join().expect("client");
     instance.stop()?;
 
@@ -64,6 +68,6 @@ mod tests {
     fn example_uses_reusable_http_server_composition() {
         let output = run().expect("example");
         assert!(output.starts_with("GET HTTP/1.1 200 OK\r\n"));
-        assert!(output.ends_with("\r\n\r\nhello from composition"));
+        assert!(output.ends_with("\r\n\r\nhello from /example"));
     }
 }

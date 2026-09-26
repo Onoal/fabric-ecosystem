@@ -20,7 +20,7 @@ packages/networking/tcp
     TCP byte-stream transport capability
 
 packages/networking/http
-    HTTP/1 request/response behavior over TCP
+    HTTP/1 exchange behavior over TCP
 
 compositions/web/http-server
     opinionated local assembly of TCP realization, runtime address discovery,
@@ -43,3 +43,7 @@ standalone ordinary `fabric::Composition`. Both paths use the same assembly.
 Non-goals: routing, application handlers, database access, key-value storage,
 logging, metrics, TLS, public internet exposure, reverse proxying, worker
 runtime, deployment, scheduling, CLI, registry, or STEL integration.
+
+Runtime callers use `HttpServer::accept_exchange()`, inspect the request through
+`HttpExchange::request()`, and commit exactly one response with
+`HttpExchange::respond(...)`.
