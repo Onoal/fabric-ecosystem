@@ -83,6 +83,8 @@ Packages are grouped by capability ownership:
   loopback TCP byte streams.
 - `packages/observability/counter` owns the first observability capability:
   monotonic counter metrics.
+- `packages/observability/logging` owns semantic logging: explicit log records
+  emitted by application/system behavior through a named `LogSink`.
 - `packages/security/ed25519` owns the first security capability: concrete
   Ed25519 signing.
 
@@ -305,6 +307,38 @@ explicit measured fact selected by the behavior that increments it.
 This package deliberately does not introduce OXP `Observation`, Oracle
 execution evidence, Origin/Identis identities, tracing spans, logging records,
 or audit authority.
+
+### Logging
+
+`packages/observability/logging` establishes semantic logging. The semantic
+definition is `LogSink`, a named Resource occurrence representing one logging
+capability that Components may require when emitting logs is part of their
+behavior.
+
+Logging remains separate from Fabric's own operational facilities:
+
+- It is not Fabric lifecycle diagnostics.
+- It is not generic `Instance` observation.
+- It is not internal tracing.
+- It is not Oracle Observation, Origin/Identis history, or audit evidence.
+
+The first record model is intentionally small: `LogLevel`, `LogRecord`, and
+`LogError`. Records contain level, message, and an optional target. They do not
+claim distributed timestamps, trace/span IDs, identity attribution, tenants,
+schema registries, or arbitrary structured telemetry.
+
+The first local realization is `ConsoleLogSink`, which writes real process
+stdout/stderr output. Console configuration is Adapter config. There is no
+process-global singleton; multiple named sinks such as `application` and
+`security` are ordinary Resource occurrences.
+
+`CounterMetric` remains independent from `LogSink`. A counter says that
+something occurred a number of times; a log says something about one explicit
+event. Future behavior may require both.
+
+Console logs are ephemeral operational output. They do not provide durability,
+tamper resistance, retention guarantees, legal evidence, identity attribution,
+or authoritative history.
 
 ## Hosts
 

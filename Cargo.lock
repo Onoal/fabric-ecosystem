@@ -192,6 +192,7 @@ dependencies = [
  "onoal-fabric-package-messaging-queue",
  "onoal-fabric-package-networking-tcp",
  "onoal-fabric-package-observability-counter",
+ "onoal-fabric-package-observability-logging",
  "onoal-fabric-package-process-runtime",
  "onoal-fabric-package-relational-database",
  "onoal-fabric-package-security-ed25519",
@@ -471,6 +472,14 @@ dependencies = [
  "futures",
  "onoal-fabric",
  "onoal-fabric-package-messaging-queue",
+]
+
+[[package]]
+name = "onoal-fabric-package-observability-logging"
+version = "0.1.0"
+dependencies = [
+ "futures",
+ "onoal-fabric",
 ]
 
 [[package]]

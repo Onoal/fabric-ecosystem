@@ -1,0 +1,17 @@
+[package]
+name = "onoal-fabric-package-observability-logging"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+description = "Semantic logging capability package for Fabric"
+
+[lib]
+name = "fabric_package_observability_logging"
+path = "src/lib.rs"
+
+[dependencies]
+fabric.workspace = true
+
+[dev-dependencies]
+futures.workspace = true

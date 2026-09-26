@@ -7,6 +7,7 @@ use fabric_package_networking_tcp::{
     TcpByteStreamTransport, TcpConnectResult, TcpProbeObservation, TcpTransportError,
 };
 use fabric_package_observability_counter::{CounterMetric, DualCounterSnapshot};
+use fabric_package_observability_logging::{LogRecord, LogSink};
 use fabric_package_process_runtime::{ExecutionEnvironment, ProcessOutput, ProcessRuntime};
 use fabric_package_relational_database::{
     RelationalDatabase, RelationalQueryResult, RelationalValue,
@@ -26,6 +27,7 @@ pub struct ConsumerOutput {
     pub signature_valid: bool,
     pub metric_counts: DualCounterSnapshot,
     pub database_rows: RelationalQueryResult,
+    pub logged: LogRecord,
 }
 
 fabric::component! {
@@ -42,6 +44,7 @@ fabric::component! {
                 successful_sends: CounterMetric;
                 failed_sends: CounterMetric;
                 database: RelationalDatabase;
+                log: LogSink;
                 environment: fabric_package_process_runtime::LocalExecutionEnvironment;
             }
         }
@@ -129,6 +132,15 @@ fabric::component! {
                     vec![],
                 )
                 .expect("third-party queries row");
+                let logged = LogRecord::targeted(
+                    fabric_package_observability_logging::LogLevel::Info,
+                    "third-party",
+                    "public consumer exercised packages",
+                );
+                self.relations()
+                    .log
+                    .emit(logged.clone())
+                    .expect("third-party emits log record");
                 ConsumerOutput {
                     stored,
                     process,
@@ -141,6 +153,7 @@ fabric::component! {
                     signature_valid,
                     metric_counts,
                     database_rows,
+                    logged,
                 }
             }
         }
@@ -157,6 +170,7 @@ pub fn application() -> impl IntoFabricContribution {
         CounterMetric::select("successful-sends").expect("successful send counter");
     let failed_sends = CounterMetric::select("failed-sends").expect("failed send counter");
     let database = RelationalDatabase::select("primary-db").expect("database selection");
+    let log = LogSink::select("application-log").expect("log sink selection");
     let component = PackageConsumer::define()
         .select_named_resource_provider(
             &fabric::authoring::ComponentResourceRequirement::new(
@@ -213,6 +227,13 @@ pub fn application() -> impl IntoFabricContribution {
                 fabric::authoring::Requires::<RelationalDatabase>::provisional(),
             ),
             &database,
+        )
+        .select_named_resource_provider(
+            &fabric::authoring::ComponentResourceRequirement::new(
+                fabric::component::ComponentRelationName::new("log").expect("role"),
+                fabric::authoring::Requires::<LogSink>::provisional(),
+            ),
+            &log,
         );
 
     FabricContribution::new().component(component)
@@ -263,11 +284,14 @@ mod tests {
                 "primary-db",
                 database_path.clone(),
             ))
+            .with(fabric_package_observability_logging::console_logging(
+                "application-log",
+            ))
             .with(application())
             .build()
             .expect("composition");
 
-        assert_eq!(composition.resources().count(), 8);
+        assert_eq!(composition.resources().count(), 9);
         assert_eq!(composition.systems().count(), 1);
         assert_eq!(composition.components().count(), 1);
         assert_eq!(
@@ -311,6 +335,10 @@ mod tests {
             .relations()
             .iter()
             .any(|relation| relation.role().as_str() == "database"));
+        assert!(composition
+            .relations()
+            .iter()
+            .any(|relation| relation.role().as_str() == "log"));
 
         let mut instance = composition
             .materialize_on(
@@ -359,6 +387,7 @@ mod tests {
                 RelationalValue::Text("public-consumer".to_owned()),
             ]
         );
+        assert_eq!(output.logged.target.as_deref(), Some("third-party"));
         let _ = std::fs::remove_file(database_path);
     }
 }
