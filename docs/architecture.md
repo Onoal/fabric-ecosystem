@@ -473,6 +473,8 @@ It contributes one named TCP Resource occurrence, the existing
 `TcpTransportInspector` for runtime address discovery, and the existing
 `HttpServer` Component. The resulting `fabric::Composition` contains ordinary
 Fabric Resources, Components, relations, realization, and config only.
+The inspector observes live facts only; TCP connect/accept behavior remains on
+the `TcpByteStreamTransport` Resource.
 
 Current Fabric v1 Component identity is definition-scoped. The HTTP server
 Composition therefore supports one `HttpServer` Component definition occurrence

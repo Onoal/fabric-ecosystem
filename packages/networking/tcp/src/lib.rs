@@ -11,6 +11,9 @@
 //! - `TcpTransportInspector`, reusable runtime inspection behavior for facts
 //!   such as the actual bound address of an ephemeral listener.
 //!
+//! Transport operations remain on `TcpByteStreamTransport`; the inspector only
+//! observes runtime facts.
+//!
 //! TCP remains byte-oriented. It does not define TLS, DNS, HTTP, OXP endpoint
 //! vocabulary, application framing, routing, proxying, or connection pooling.
 

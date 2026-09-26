@@ -25,6 +25,9 @@ TCP bytes
 - `TcpTransportInspector`: reusable Component for runtime inspection, including
   the actual bound address of an ephemeral listener.
 
+Transport operations remain on `TcpByteStreamTransport`. `TcpTransportInspector`
+only observes runtime facts; it does not connect, accept, read, or write.
+
 ## Authoring
 
 ```rust
@@ -71,7 +74,8 @@ part of this first v1 TCP foundation.
 
 When binding to `127.0.0.1:0`, the OS selects the actual port at start time.
 That address is live runtime truth. Use `TcpTransportInspector` to inspect it;
-do not put live ports into Composition truth.
+do not put live ports into Composition truth. Connection establishment remains
+owned by `TcpByteStreamTransport::connect(...)`.
 
 ## Multiple Occurrences
 

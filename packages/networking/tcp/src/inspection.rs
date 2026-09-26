@@ -1,4 +1,4 @@
-use crate::{transport::TcpByteStreamTransport, TcpConnectResult, TcpSocketAddress};
+use crate::{transport::TcpByteStreamTransport, TcpSocketAddress};
 
 /// Runtime inspection facts for one TCP transport occurrence.
 #[derive(Clone, Debug, PartialEq, Eq)]
@@ -20,7 +20,6 @@ fabric::component! {
 
         api {
             fn inspect_transport(&self) -> TcpTransportInspection;
-            fn connect(&self, remote: TcpSocketAddress) -> TcpConnectResult;
         }
 
         runtime {
@@ -30,10 +29,6 @@ fabric::component! {
                     actual: self.relations().transport.actual_bound_address(),
                     accepted_connections: self.relations().transport.accepted_connections(),
                 }
-            }
-
-            fn connect(&self, remote: TcpSocketAddress) -> TcpConnectResult {
-                self.relations().transport.connect(remote)
             }
         }
     }

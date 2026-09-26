@@ -11,6 +11,28 @@ use std::net::{Shutdown, TcpStream};
 use std::thread;
 
 fabric::component! {
+    TestTcpConnector {
+        id: "onoal.package.networking.tcp.test-connector";
+
+        relations {
+            requires {
+                transport: TcpByteStreamTransport;
+            }
+        }
+
+        api {
+            fn connect(&self, remote: TcpSocketAddress) -> TcpConnectResult;
+        }
+
+        runtime {
+            fn connect(&self, remote: TcpSocketAddress) -> TcpConnectResult {
+                self.relations().transport.connect(remote)
+            }
+        }
+    }
+}
+
+fabric::component! {
     TestEchoServer {
         id: "onoal.package.networking.tcp.test-echo-server";
 
@@ -124,6 +146,18 @@ fn bind_test_echo(transport_name: &'static str) -> impl IntoFabricContribution {
     FabricContribution::new().component(component)
 }
 
+fn bind_test_connector(transport_name: &'static str) -> impl IntoFabricContribution {
+    let transport = TcpByteStreamTransport::select(transport_name).expect("transport selection");
+    let component = TestTcpConnector::define().select_named_resource_provider(
+        &fabric::authoring::ComponentResourceRequirement::new(
+            fabric::component::ComponentRelationName::new("transport").expect("role"),
+            fabric::authoring::Requires::<TcpByteStreamTransport>::provisional(),
+        ),
+        &transport,
+    );
+    FabricContribution::new().component(component)
+}
+
 fn bind_incremental_reader(transport_name: &'static str) -> impl IntoFabricContribution {
     let transport = TcpByteStreamTransport::select(transport_name).expect("transport selection");
     let component = TestIncrementalReader::define().select_named_resource_provider(
@@ -165,6 +199,7 @@ fn composition(id: &str) -> Composition {
         .expect("fabric")
         .with(loopback_tcp_transport("api"))
         .with(tcp_transport_inspector("api"))
+        .with(bind_test_connector("api"))
         .with(bind_test_echo("api"))
         .build()
         .expect("composition")
@@ -292,13 +327,14 @@ fn connect_returns_runtime_connection_value_without_echo_semantics() {
     let composition = composition("onoal.package.test.network.connect");
     let instance = started_instance(&composition, "onoal.package.test.network.connect.instance");
     let inspector = activate::<TcpTransportInspector>(&instance);
+    let connector = activate::<TestTcpConnector>(&instance);
     let echo = activate::<TestEchoServer>(&instance);
     let actual = block_on(inspector.inspect_transport())
         .expect("inspect")
         .actual
         .expect("address");
 
-    let connection = match block_on(inspector.connect(actual)).expect("connect") {
+    let connection = match block_on(connector.connect(actual)).expect("connect") {
         TcpConnectResult::Connected(connection) => connection,
         TcpConnectResult::Failed(error) => panic!("connect failed: {error:?}"),
     };
@@ -411,9 +447,10 @@ fn failures_peer_disconnect_stale_connection_and_stopped_instance_are_bounded() 
         started_instance(&composition, "onoal.package.test.network.failures.instance");
     let stale_connection = {
         let inspector = activate::<TcpTransportInspector>(&instance);
+        let connector = activate::<TestTcpConnector>(&instance);
         let echo = activate::<TestEchoServer>(&instance);
 
-        let failed = block_on(inspector.connect(TcpSocketAddress {
+        let failed = block_on(connector.connect(TcpSocketAddress {
             host: "127.0.0.1".to_owned(),
             port: 9,
         }))
@@ -440,7 +477,7 @@ fn failures_peer_disconnect_stale_connection_and_stopped_instance_are_bounded() 
             }) | Ok(0)
         ));
 
-        let connected = match block_on(inspector.connect(address)).expect("connect stale") {
+        let connected = match block_on(connector.connect(address)).expect("connect stale") {
             TcpConnectResult::Connected(connection) => connection,
             TcpConnectResult::Failed(error) => panic!("connect failed: {error:?}"),
         };
@@ -462,10 +499,8 @@ fn failures_peer_disconnect_stale_connection_and_stopped_instance_are_bounded() 
             ..
         })
     ));
-    let stopped_inspector = instance
-        .component::<TcpTransportInspector>()
-        .expect("inspector");
-    assert!(block_on(stopped_inspector.connect(TcpSocketAddress::loopback_ephemeral())).is_err());
+    let stopped_connector = instance.component::<TestTcpConnector>().expect("connector");
+    assert!(block_on(stopped_connector.connect(TcpSocketAddress::loopback_ephemeral())).is_err());
 }
 
 #[test]
