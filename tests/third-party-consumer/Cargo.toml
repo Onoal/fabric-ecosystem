@@ -11,5 +11,7 @@ fabric-package-messaging-queue.workspace = true
 fabric-package-networking-tcp.workspace = true
 fabric-package-observability-counter.workspace = true
 fabric-package-process-runtime.workspace = true
+fabric-package-relational-database.workspace = true
 fabric-package-security-ed25519.workspace = true
+fabric-package-sqlite.workspace = true
 futures.workspace = true

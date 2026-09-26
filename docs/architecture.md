@@ -72,6 +72,10 @@ live instance observations.
 Packages are grouped by capability ownership:
 
 - `packages/data/key-value` owns the KeyValue capability.
+- `packages/data/relational-database` owns generic bounded relational database
+  semantics.
+- `packages/data/sqlite` owns the first SQLite realization of the relational
+  database semantics.
 - `packages/execution/process-runtime` owns local process execution.
 - `packages/messaging/queue` owns the first messaging capability: a bounded
   FIFO queue.
@@ -119,6 +123,30 @@ The foundation is intentionally breadth-first, not exhaustive.
 
 None of these reserved families should appear as empty crates. A package family
 is introduced only when it contains useful Fabric authoring.
+
+### Relational Database and SQLite
+
+`packages/data/relational-database` establishes the generic semantic Resource:
+`RelationalDatabase`. It represents one named relational database capability
+through which a consumer can execute bounded SQL-style statements and query
+rows using package-owned portable values.
+
+`packages/data/sqlite` is a separate realization package. It depends on the
+RelationalDatabase package and supplies a SQLite Adapter. The semantic package
+does not depend on SQLite, and SQLite file paths or in-memory behavior belong
+to SQLite Adapter Config rather than to the generic Resource.
+
+This proves the ecosystem law:
+
+```text
+semantic capability package
+!=
+concrete realization package
+```
+
+SQLite persistence is external durable data. A Fabric Composition declares the
+database occurrence and selected realization; it does not contain rows, live
+connections, file locks, or query results.
 
 ### Messaging Queue
 
@@ -390,9 +418,7 @@ views when there is enough real pressure.
 The repository contract has obvious homes for later artifacts without changing
 the laws:
 
-- relational database capability: `packages/data/relational-database`
 - PostgreSQL realization/capability package: `packages/data/postgresql`
-- SQLite realization/capability package: `packages/data/sqlite`
 - HTTP capability: `packages/networking/http`
 - logging capability: `packages/observability/logging`
 - worker runtime: `packages/execution/worker-runtime`
@@ -404,6 +430,9 @@ the laws:
 
 These are placement examples only. Their semantics should be designed when
 they are actually implemented.
+
+The relational database and SQLite slots are now occupied by real M2 packages:
+`packages/data/relational-database` and `packages/data/sqlite`.
 
 ## Fabric Boundary
 

@@ -22,6 +22,10 @@ Fabric Ecosystem
 
 - `packages/data/key-value`: a semantic KeyValue resource with a stateful in-memory
   adapter and reusable authoring contributions.
+- `packages/data/relational-database`: generic bounded relational database
+  semantics with portable value/result/error types.
+- `packages/data/sqlite`: a SQLite realization of `RelationalDatabase` with
+  file-backed local persistence.
 - `packages/execution/process-runtime`: a local process execution capability with a
   real OS-process adapter, execution environment system, and component witness.
 - `packages/messaging/queue`: a bounded non-durable FIFO queue capability with

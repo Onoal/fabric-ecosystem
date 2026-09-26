@@ -1,0 +1,19 @@
+[package]
+name = "onoal-fabric-package-sqlite"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+description = "SQLite realization package for the Fabric RelationalDatabase capability"
+
+[lib]
+name = "fabric_package_sqlite"
+path = "src/lib.rs"
+
+[dependencies]
+fabric.workspace = true
+fabric-package-relational-database.workspace = true
+rusqlite.workspace = true
+
+[dev-dependencies]
+futures.workspace = true

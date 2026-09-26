@@ -8,9 +8,12 @@ use fabric_package_networking_tcp::{
 };
 use fabric_package_observability_counter::{CounterMetric, DualCounterSnapshot};
 use fabric_package_process_runtime::{ExecutionEnvironment, ProcessOutput, ProcessRuntime};
+use fabric_package_relational_database::{
+    RelationalDatabase, RelationalQueryResult, RelationalValue,
+};
 use fabric_package_security_ed25519::{verify_ed25519_signature, Ed25519Signer, SignedPayload};
 
-#[derive(Clone, Debug, PartialEq, Eq)]
+#[derive(Clone, Debug, PartialEq)]
 pub struct ConsumerOutput {
     pub stored: Option<Vec<u8>>,
     pub process: ProcessOutput,
@@ -22,6 +25,7 @@ pub struct ConsumerOutput {
     pub signed: SignedPayload,
     pub signature_valid: bool,
     pub metric_counts: DualCounterSnapshot,
+    pub database_rows: RelationalQueryResult,
 }
 
 fabric::component! {
@@ -37,6 +41,7 @@ fabric::component! {
                 signer: Ed25519Signer;
                 successful_sends: CounterMetric;
                 failed_sends: CounterMetric;
+                database: RelationalDatabase;
                 environment: fabric_package_process_runtime::LocalExecutionEnvironment;
             }
         }
@@ -106,6 +111,24 @@ fabric::component! {
                     successes: self.relations().successful_sends.current(),
                     failures: self.relations().failed_sends.current(),
                 };
+                self.relations().database.execute(
+                    "CREATE TABLE IF NOT EXISTS third_party_items (id INTEGER, name TEXT NOT NULL)".to_owned(),
+                    vec![],
+                )
+                .expect("third-party creates table");
+                self.relations().database.execute(
+                    "INSERT INTO third_party_items (id, name) VALUES (?1, ?2)".to_owned(),
+                    vec![
+                        RelationalValue::Integer(1),
+                        RelationalValue::Text("public-consumer".to_owned()),
+                    ],
+                )
+                .expect("third-party inserts row");
+                let database_rows = self.relations().database.query(
+                    "SELECT id, name FROM third_party_items ORDER BY id".to_owned(),
+                    vec![],
+                )
+                .expect("third-party queries row");
                 ConsumerOutput {
                     stored,
                     process,
@@ -117,6 +140,7 @@ fabric::component! {
                     signed,
                     signature_valid,
                     metric_counts,
+                    database_rows,
                 }
             }
         }
@@ -132,6 +156,7 @@ pub fn application() -> impl IntoFabricContribution {
     let successful_sends =
         CounterMetric::select("successful-sends").expect("successful send counter");
     let failed_sends = CounterMetric::select("failed-sends").expect("failed send counter");
+    let database = RelationalDatabase::select("primary-db").expect("database selection");
     let component = PackageConsumer::define()
         .select_named_resource_provider(
             &fabric::authoring::ComponentResourceRequirement::new(
@@ -181,6 +206,13 @@ pub fn application() -> impl IntoFabricContribution {
                 fabric::authoring::Requires::<CounterMetric>::provisional(),
             ),
             &failed_sends,
+        )
+        .select_named_resource_provider(
+            &fabric::authoring::ComponentResourceRequirement::new(
+                fabric::component::ComponentRelationName::new("database").expect("role"),
+                fabric::authoring::Requires::<RelationalDatabase>::provisional(),
+            ),
+            &database,
         );
 
     FabricContribution::new().component(component)
@@ -190,9 +222,23 @@ pub fn application() -> impl IntoFabricContribution {
 mod tests {
     use super::*;
     use futures::executor::block_on;
+    use std::path::PathBuf;
+    use std::time::{SystemTime, UNIX_EPOCH};
+
+    fn unique_sqlite_path() -> PathBuf {
+        let nanos = SystemTime::now()
+            .duration_since(UNIX_EPOCH)
+            .expect("system time")
+            .as_nanos();
+        std::env::temp_dir().join(format!(
+            "onoal-fabric-third-party-sqlite-{}-{nanos}.db",
+            std::process::id()
+        ))
+    }
 
     #[test]
     fn third_party_consumer_composes_package_contributions_without_package_identity() {
+        let database_path = unique_sqlite_path();
         let composition = Fabric::new("onoal.package.test.third-party")
             .expect("fabric")
             .with(fabric_package_key_value::audited_memory_key_value(
@@ -213,11 +259,15 @@ mod tests {
             .with(fabric_package_observability_counter::in_memory_counter(
                 "failed-sends",
             ))
+            .with(fabric_package_sqlite::sqlite_database(
+                "primary-db",
+                database_path.clone(),
+            ))
             .with(application())
             .build()
             .expect("composition");
 
-        assert_eq!(composition.resources().count(), 7);
+        assert_eq!(composition.resources().count(), 8);
         assert_eq!(composition.systems().count(), 1);
         assert_eq!(composition.components().count(), 1);
         assert_eq!(
@@ -257,6 +307,10 @@ mod tests {
             .relations()
             .iter()
             .any(|relation| relation.role().as_str() == "failed_sends"));
+        assert!(composition
+            .relations()
+            .iter()
+            .any(|relation| relation.role().as_str() == "database"));
 
         let mut instance = composition
             .materialize_on(
@@ -298,5 +352,13 @@ mod tests {
                 failures: 0
             }
         );
+        assert_eq!(
+            output.database_rows.rows()[0].values(),
+            &[
+                RelationalValue::Integer(1),
+                RelationalValue::Text("public-consumer".to_owned()),
+            ]
+        );
+        let _ = std::fs::remove_file(database_path);
     }
 }
