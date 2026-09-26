@@ -248,12 +248,6 @@ mod tests {
     use fabric_composition_local_backend::{
         build_local_backend_composition, local_backend_stack, LocalBackendCompositionConfig,
     };
-    use fabric_composition_local_queue_pipeline::{
-        build_local_queue_pipeline_composition, local_queue_pipeline, LocalQueuePipelineConfig,
-    };
-    use fabric_package_messaging_queue::{
-        QueueConsumerInstanceApi, QueueProducer, QueueProducerInstanceApi,
-    };
     use fabric_package_networking_http::{HttpResponse, HttpServer, HttpServerInstanceApi};
     use fabric_package_networking_tcp::{TcpTransportInspector, TcpTransportInspectorInstanceApi};
     use futures::executor::block_on;
@@ -270,8 +264,30 @@ mod tests {
     }
 
     fabric::component! {
+        ThirdPartyQueueProducer {
+            id: "onoal.package.test.third-party.queue.producer";
+
+            relations {
+                requires {
+                    jobs: FifoQueue;
+                }
+            }
+
+            api {
+                fn produce(&self, payload: Vec<u8>) -> QueueSendResult;
+            }
+
+            runtime {
+                fn produce(&self, payload: Vec<u8>) -> QueueSendResult {
+                    self.relations().jobs.send(payload)
+                }
+            }
+        }
+    }
+
+    fabric::component! {
         ThirdPartyQueueWorker {
-            id: "onoal.package.test.third-party.local-queue-pipeline.worker";
+            id: "onoal.package.test.third-party.queue.worker";
 
             relations {
                 requires {
@@ -296,6 +312,18 @@ mod tests {
                 }
             }
         }
+    }
+
+    fn third_party_queue_producer(queue_name: &'static str) -> impl IntoFabricContribution {
+        let queue = FifoQueue::select(queue_name).expect("queue selection");
+        let component = ThirdPartyQueueProducer::define().select_named_resource_provider(
+            &fabric::authoring::ComponentResourceRequirement::new(
+                fabric::component::ComponentRelationName::new("jobs").expect("role"),
+                fabric::authoring::Requires::<FifoQueue>::provisional(),
+            ),
+            &queue,
+        );
+        FabricContribution::new().component(component)
     }
 
     fabric::component! {
@@ -413,7 +441,7 @@ mod tests {
             .with(fabric_package_process_runtime::local_process_runtime(
                 "local",
             ))
-            .with(fabric_package_messaging_queue::memory_queue("events", 4))
+            .with(fabric_package_messaging_queue::memory_queue("events", 4).expect("queue config"))
             .with(fabric_package_networking_tcp::loopback_tcp_transport("api"))
             .with(fabric_package_security_ed25519::ephemeral_ed25519_signer(
                 "release",
@@ -725,59 +753,61 @@ mod tests {
     }
 
     #[test]
-    fn third_party_consumer_uses_standalone_local_queue_pipeline_composition() {
-        let composition = build_local_queue_pipeline_composition(
-            "onoal.package.test.third-party.local-queue-pipeline",
-            LocalQueuePipelineConfig::new("jobs", 4).expect("config"),
-        )
-        .expect("composition");
+    fn third_party_consumer_uses_queue_package_directly() {
+        let composition = Fabric::new("onoal.package.test.third-party.queue-direct")
+            .expect("fabric")
+            .with(fabric_package_messaging_queue::memory_queue("jobs", 4).expect("queue config"))
+            .with(third_party_queue_producer("jobs"))
+            .with(third_party_queue_worker("jobs"))
+            .build()
+            .expect("composition");
         let mut instance = composition
             .materialize_on(
-                "onoal.package.test.third-party.local-queue-pipeline.instance",
+                "onoal.package.test.third-party.queue-direct.instance",
                 &HostDescriptor::native(),
             )
             .expect("instance");
         instance.start().expect("start");
 
-        let producer = instance.component::<QueueProducer>().expect("producer");
+        let producer = instance
+            .component::<ThirdPartyQueueProducer>()
+            .expect("producer");
         producer.reconcile().expect("producer reconcile");
-        let consumer = instance
-            .component::<fabric_package_messaging_queue::QueueConsumer>()
-            .expect("consumer");
-        consumer.reconcile().expect("consumer reconcile");
+        let worker = instance
+            .component::<ThirdPartyQueueWorker>()
+            .expect("worker");
+        worker.reconcile().expect("worker reconcile");
 
         assert_eq!(
             block_on(producer.produce(b"public-queue".to_vec())).expect("send"),
             QueueSendResult::Accepted
         );
         assert_eq!(
-            block_on(consumer.consume()).expect("consume"),
-            Some(QueueMessage {
-                payload: b"public-queue".to_vec()
-            })
+            block_on(worker.process_one()).expect("process"),
+            Some(b"third-party:public-queue".to_vec())
         );
     }
 
     #[test]
-    fn third_party_worker_extends_local_queue_pipeline_stack() {
-        let composition =
-            Fabric::new("onoal.package.test.third-party.local-queue-pipeline.extension")
-                .expect("fabric")
-                .with(local_queue_pipeline(
-                    LocalQueuePipelineConfig::new("jobs", 4).expect("config"),
-                ))
-                .with(third_party_queue_worker("jobs"))
-                .build()
-                .expect("composition");
+    fn third_party_worker_extends_plain_queue_capability() {
+        let composition = Fabric::new("onoal.package.test.third-party.queue-extension")
+            .expect("fabric")
+            .with(fabric_package_messaging_queue::memory_queue("jobs", 4).expect("queue config"))
+            .with(third_party_queue_producer("jobs"))
+            .with(third_party_queue_worker("jobs"))
+            .build()
+            .expect("composition");
         let mut instance = composition
             .materialize_on(
-                "onoal.package.test.third-party.local-queue-pipeline.extension.instance",
+                "onoal.package.test.third-party.queue-extension.instance",
                 &HostDescriptor::native(),
             )
             .expect("instance");
         instance.start().expect("start");
 
-        let producer = instance.component::<QueueProducer>().expect("producer");
+        let producer = instance
+            .component::<ThirdPartyQueueProducer>()
+            .expect("producer");
         producer.reconcile().expect("producer reconcile");
         let worker = instance
             .component::<ThirdPartyQueueWorker>()

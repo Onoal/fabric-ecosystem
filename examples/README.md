@@ -19,7 +19,5 @@ reusable ecosystem semantics merely because they are runnable.
 - `local-backend`: a compact nested-Composition example that consumes the local
   backend foundation, adds application-owned database/log behavior, and serves
   one HTTP response from local data.
-- `local-queue-pipeline`: a compact messaging Composition example that consumes
-  the local queue pipeline and adds an example-owned worker Component.
 - `observed-queue`: a compact observability example showing application-owned
   instrumentation over Queue behavior with success/failure counters.

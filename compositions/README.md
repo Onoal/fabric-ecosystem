@@ -16,16 +16,9 @@ HTTP Server assembly and adds SQLite relational persistence plus Console
 logging as a local backend foundation. Application behavior remains ordinary
 consumer-owned Fabric Components.
 
-`compositions/messaging/local-queue-pipeline` is the first messaging
-Composition family. It assembles one named in-memory `FifoQueue`, one
-`QueueProducer`, and one `QueueConsumer`. Worker behavior remains
-consumer-owned; this Composition is not a WorkerRuntime, scheduler, or durable
-broker.
-
-The web and messaging Compositions both record the current Fabric v1 Component
-identity law: reusable assemblies can preserve explicit named Resource
-occurrences, while repeated use of the same package Component definitions in
-one built Composition is constrained by definition-scoped Component identity.
+Messaging currently has no Composition artifact. The previous local queue
+pipeline was removed because it wrapped one Resource with proxy Components
+rather than adding a meaningful reusable assembly opinion.
 
 Good future candidates include storage-serving systems, compute-serving
 systems, worker systems, or additional local development stacks.
@@ -34,6 +27,10 @@ Do not add a Composition artifact merely to bundle all current packages
 together. A Composition may use ecosystem packages, project-specific Fabric
 definitions, custom Components, custom config, and explicit relations. It is not
 defined by package count.
+
+A Composition must add a meaningful reusable assembly opinion. Wrapping one
+Resource, or adding Components that only proxy that Resource, does not earn a
+Composition artifact.
 
 The expected shape is:
 

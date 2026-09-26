@@ -201,20 +201,13 @@ not become owner of remote canonical state. OXP remains transport/exchange
 machinery, Oracle remains planning/control, and Origin/Identis identity or
 authority concepts are not mandatory messaging primitives.
 
-`compositions/messaging/local-queue-pipeline` builds on that package as the
-first messaging Composition family:
-
-```text
-memory_queue(name, capacity)
-+ queue_producer(name)
-+ queue_consumer(name)
-= local_queue_pipeline(name, capacity)
-```
-
-The Composition owns the local assembly opinion. It does not define a new
-message, worker, scheduler, durable broker, retry, acknowledgement, or
-background processing model. Consumer-owned Components can be added to process
-messages by requiring the named `FifoQueue`.
+Queue does not currently have a reusable messaging Composition. The removed
+local queue pipeline only wrapped one Resource with generic proxy Components,
+which did not add a meaningful assembly opinion. Consumer-owned Components can
+produce, consume, or process messages by requiring the named `FifoQueue`
+directly. A future messaging Composition must assemble genuinely distinct
+useful behaviors, such as worker/runtime or durable delivery behavior once such
+semantics are earned.
 
 ### TCP Byte-Stream Transport
 
@@ -446,8 +439,6 @@ Current and future classification:
 - `compositions/web/http-server`: current reusable local HTTP-serving assembly.
 - `compositions/web/local-backend`: current nested local backend foundation
   that reuses the HTTP server assembly and adds SQLite plus Console logging.
-- `compositions/messaging/local-queue-pipeline`: current local messaging
-  pipeline assembly.
 - `packages/data/...`: reusable storage/data capabilities.
 - `compositions/servers/storage-server`: possible future assembled
   storage-serving system.
@@ -498,12 +489,10 @@ registration, or Component-to-Component injection. Consumers extend it by
 adding ordinary Fabric Components that require `RelationalDatabase` and
 `LogSink`.
 
-`compositions/messaging/local-queue-pipeline` proves `compositions/` is not
-synonymous with web/backend templates. It assembles a non-durable local
-messaging pipeline from the Queue package and leaves worker/application
-behavior to consumers. It also preserves the distinction between multiple
-Resource occurrences, which can coexist, and repeated package Component
-definitions, which are constrained by current Fabric v1 Component identity.
+The messaging family currently has no reusable Composition artifact. That is
+intentional: wrapping one Resource, or adding Components that only proxy that
+Resource, does not earn a Composition. Future messaging Compositions should
+exist only when they add a meaningful reusable assembly opinion.
 
 The default Composition artifact shape is:
 

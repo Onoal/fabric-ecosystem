@@ -76,7 +76,7 @@ pub fn observed_queue_producer() -> impl IntoFabricContribution {
 
 pub fn run() -> Result<DualCounterSnapshot, Box<dyn std::error::Error>> {
     let composition = Fabric::new("fabric.ecosystem.example.observed-queue")?
-        .with(fabric_package_messaging_queue::memory_queue("events", 1))
+        .with(fabric_package_messaging_queue::memory_queue("events", 1)?)
         .with(in_memory_counter("successful-sends"))
         .with(in_memory_counter("failed-sends"))
         .with(observed_queue_producer())

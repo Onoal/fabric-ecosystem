@@ -493,7 +493,7 @@ mod tests {
     fn cross_package_queue_instrumentation_records_actual_outcomes() {
         let composition = Fabric::new("onoal.package.test.observability.queue")
             .expect("fabric")
-            .with(fabric_package_messaging_queue::memory_queue("events", 1))
+            .with(fabric_package_messaging_queue::memory_queue("events", 1).expect("queue config"))
             .with(in_memory_counter("successful-sends"))
             .with(in_memory_counter("failed-sends"))
             .with(observed_queue_component())
