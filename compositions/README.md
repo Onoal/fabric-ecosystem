@@ -13,3 +13,18 @@ Do not add a Composition artifact merely to bundle all current packages
 together. A Composition may use ecosystem packages, project-specific Fabric
 definitions, custom Components, custom config, and explicit relations. It is not
 defined by package count.
+
+The expected shape is:
+
+```text
+compositions/<category>/<composition>/
+├── Cargo.toml
+├── README.md
+├── src/
+│   └── lib.rs
+├── tests/      # when useful
+└── variants/   # only when real variants exist
+```
+
+A variant is an ecosystem authoring opinion, not a Fabric primitive. Do not
+create `variants/` before real variants exist.

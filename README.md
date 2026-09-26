@@ -12,9 +12,11 @@ Fabric
   v
 Fabric Ecosystem
   |-- packages/      reusable capability building material
+  |-- hosts/         reusable Host/environment artifacts
   |-- compositions/  reusable assembled systems
   |-- examples/      teaching and demonstrations
   |-- tests/         compatibility and integration verification
+  |-- catalog/       discovery and navigation contract
   `-- docs/          architecture and repository guidance
 ```
 
@@ -48,8 +50,19 @@ Package topology is domain-first. It is intentionally not split into
 `resources/`, `systems/`, `components/`, or `adapters/`, because a real package
 may contain all of those Fabric authoring forms.
 
+`hosts/` is reserved for reusable environment artifacts built on Fabric's
+existing Host model. Host artifacts are not Resources, Systems, Components, or
+Adapters.
+
 `compositions/` is reserved for coherent reusable assembled systems. It is not
 a package bucket and not a second Fabric runtime primitive.
 
 `examples/` contains learning artifacts. Examples may be explicit and
 pedagogical; they are not compatibility fixtures.
+
+`tests/` contains cross-package integration, compatibility, and third-party
+public-consumer verification.
+
+`catalog/` is reserved for generated or curated discovery views. Catalog
+metadata helps humans and tools find artifacts; it does not duplicate Fabric
+semantic truth.

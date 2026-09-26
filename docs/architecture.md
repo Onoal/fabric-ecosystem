@@ -1,7 +1,8 @@
 # Fabric Ecosystem Architecture
 
 Fabric Ecosystem is the source home for shareable artifacts built with Fabric:
-Packages, Compositions, and Examples.
+Packages, Host artifacts, Compositions, Examples, tests, and discovery
+catalogs.
 
 ```text
 FABRIC CORE
@@ -19,8 +20,14 @@ PACKAGES
 COMPOSITIONS
     reusable assembled systems
 
+HOSTS
+    reusable environment truth helpers
+
 EXAMPLES
     demonstrate any or all layers
+
+CATALOG
+    discovery and navigation, not semantic truth
 ```
 
 These repository families are source ownership categories. They are not new
@@ -29,14 +36,25 @@ Fabric semantic primitives.
 ## Artifact Law
 
 - Package = reusable building material.
+- Host artifact = reusable environment description/detection/authoring.
 - Composition artifact = reusable assembled system.
 - Example = teaching or demonstration artifact.
+- Test = compatibility or integration verification.
+- Catalog = discovery/index/navigation view.
 
-Package != Composition. Composition != Example. Example != Package.
+Package != Host artifact. Package != Composition. Composition != Example.
+Example != Test. Catalog != Fabric semantic truth.
 
 None of these repository artifact kinds introduces `PackageId`,
-`CompositionArtifactId`, `ExampleId`, `EcosystemArtifact`, or
+`HostPackageId`, `CompositionArtifactId`, `ExampleId`, `EcosystemArtifact`, or
 `EcosystemRuntime`.
+
+Repository taxonomy is not Fabric ontology. A folder named `data`,
+`networking`, or `security` helps humans and tools navigate source ownership;
+it does not create a Fabric semantic kind. Repository taxonomy is also not a
+Cargo boundary. The current root workspace is useful for today's size, but
+future CI may partition workspaces if hundreds of artifacts make one workspace
+impractical.
 
 ## Packages
 
@@ -67,6 +85,24 @@ Packages are grouped by capability ownership:
 This repository deliberately avoids kind-based folders such as `resources/` or
 `adapters/`. Those folders would make implementation machinery look more
 important than capability ownership.
+
+The default package shape is:
+
+```text
+packages/<category>/<package>/
+├── Cargo.toml
+├── README.md
+├── src/
+│   └── lib.rs
+├── tests/      # only when package-specific integration tests exist
+└── examples/   # only when local package examples add value
+```
+
+This is a convention, not ceremony. A package should make clear what
+capability it owns, what Fabric semantics it provides, what realization(s) it
+includes, what it deliberately does not own, and how another realization can
+be added. It should not create fake `resource.rs`, `adapter.rs`, `system.rs`,
+or `component.rs` files when its actual complexity does not need them.
 
 ### Reserved Capability Pressure
 
@@ -242,6 +278,31 @@ This package deliberately does not introduce OXP `Observation`, Oracle
 execution evidence, Origin/Identis identities, tracing spans, logging records,
 or audit authority.
 
+## Hosts
+
+`hosts/` is for reusable artifacts that author or detect environment truth
+through Fabric's existing Host model. Host artifacts are separate because:
+
+```text
+Host != Resource != System != Component != Adapter
+```
+
+Future examples may include Linux, macOS, Windows, or synthetic test Host
+descriptors, but no concrete Host artifact is required before real pressure
+exists. A future default shape is:
+
+```text
+hosts/<host>/
+├── Cargo.toml
+├── README.md
+├── src/
+│   └── lib.rs
+└── tests/
+```
+
+That shape may evolve with the first real Host artifact. M1 establishes the
+place and ownership law, not new Host semantics.
+
 ## Compositions
 
 `compositions/` is for shareable source artifacts that assemble coherent Fabric
@@ -274,6 +335,22 @@ Illustrative future classification:
 These are examples, not implemented artifacts. A `servers/` taxonomy would be a
 repository taxonomy, not a Fabric `Server` semantic primitive.
 
+The default Composition artifact shape is:
+
+```text
+compositions/<category>/<composition>/
+├── Cargo.toml
+├── README.md
+├── src/
+│   └── lib.rs
+├── tests/      # when useful
+└── variants/   # only when real variants exist
+```
+
+A variant is an ecosystem authoring opinion, such as a future `minimal`,
+`local`, or `server` assembly. It is not a new Fabric primitive and should not
+be created before real variants exist.
+
 ## Examples
 
 `examples/` contains pedagogical artifacts. An Example may demonstrate raw
@@ -283,9 +360,55 @@ ownership.
 
 Compatibility and integration fixtures remain under `tests/`.
 
+## Tests
+
+`tests/` owns cross-package integration, public API verification, third-party
+consumer verification, and compatibility witnesses. Tests may be runnable, but
+they are not examples because their primary job is to protect behavior and
+public compatibility.
+
+## Catalog
+
+`catalog/` is reserved for discovery, index, and navigation artifacts. Catalog
+views may later help a CLI, website, documentation generator, or development
+agent answer questions such as:
+
+- which packages exist?
+- which category owns this capability?
+- where are reusable compositions?
+- which examples teach a package?
+- which tests verify third-party public consumption?
+
+Catalog metadata must never become a second semantic source of truth. It must
+not hand-maintain Resource definitions, relations, Adapter compatibility,
+Config, Composition graphs, or live runtime facts. Fabric and Rust source
+truth remain authoritative. A future generated catalog may derive navigation
+views when there is enough real pressure.
+
+## Scalability pressure
+
+The repository contract has obvious homes for later artifacts without changing
+the laws:
+
+- relational database capability: `packages/data/relational-database`
+- PostgreSQL realization/capability package: `packages/data/postgresql`
+- SQLite realization/capability package: `packages/data/sqlite`
+- HTTP capability: `packages/networking/http`
+- logging capability: `packages/observability/logging`
+- worker runtime: `packages/execution/worker-runtime`
+- Linux Host artifact: `hosts/linux`
+- HTTP server Composition: `compositions/web/http-server`
+- backend Composition: `compositions/web/backend`
+- queue worker Composition: `compositions/workers/queue-worker`
+- storage server Composition: `compositions/storage/storage-server`
+
+These are placement examples only. Their semantics should be designed when
+they are actually implemented.
+
 ## Fabric Boundary
 
-Fabric 0.7 remains unchanged. Package helpers use public Fabric APIs:
+Fabric 1.0 remains the frozen upstream foundation. Package helpers use public
+Fabric APIs:
 
 - `resource!`
 - `system!`
