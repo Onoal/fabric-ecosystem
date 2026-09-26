@@ -349,9 +349,12 @@ through Fabric's existing Host model. Host artifacts are separate because:
 Host != Resource != System != Component != Adapter
 ```
 
-Future examples may include Linux, macOS, Windows, or synthetic test Host
-descriptors, but no concrete Host artifact is required before real pressure
-exists. A future default shape is:
+`hosts/linux` is the first real Host artifact. It provides Linux detection,
+Linux facility identifiers, and reusable Linux `HostRequirement` helpers while
+returning ordinary Fabric `HostDescriptor` values.
+
+Future examples may include macOS, Windows, or synthetic test Host descriptors
+when real pressure exists. The default shape is:
 
 ```text
 hosts/<host>/
@@ -362,8 +365,8 @@ hosts/<host>/
 └── tests/
 ```
 
-That shape may evolve with the first real Host artifact. M1 establishes the
-place and ownership law, not new Host semantics.
+Host facts are not semantic capabilities, realizations, or placement policy.
+Docker is not a Host and is not modeled by the Linux artifact.
 
 ## Compositions
 

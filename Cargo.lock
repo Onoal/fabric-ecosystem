@@ -188,6 +188,7 @@ version = "0.1.0"
 dependencies = [
  "futures",
  "onoal-fabric",
+ "onoal-fabric-host-linux",
  "onoal-fabric-package-key-value",
  "onoal-fabric-package-messaging-queue",
  "onoal-fabric-package-networking-tcp",
@@ -439,6 +440,13 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "b40de4f4008aa184be6330b982b8f09e8f8276d04236963c0a458d10e6fcec3a"
 dependencies = [
  "thiserror",
+]
+
+[[package]]
+name = "onoal-fabric-host-linux"
+version = "0.1.0"
+dependencies = [
+ "onoal-fabric",
 ]
 
 [[package]]

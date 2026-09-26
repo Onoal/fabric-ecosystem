@@ -38,6 +38,8 @@ Fabric Ecosystem
   console realization for explicit application/system log records.
 - `packages/security/ed25519`: an Ed25519 signing capability with ephemeral
   live private-key state, public signature evidence, and Component witnesses.
+- `hosts/linux`: Linux Host detection, Linux facility identifiers, and reusable
+  Host requirements using Fabric's existing Host model.
 
 Packages expose ordinary Rust functions returning Fabric contributions, so a
 consumer writes normal Fabric authoring:

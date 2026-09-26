@@ -260,6 +260,18 @@ mod tests {
     #[test]
     fn third_party_consumer_composes_package_contributions_without_package_identity() {
         let database_path = unique_sqlite_path();
+        #[cfg(target_os = "linux")]
+        let host = {
+            let detected = fabric_host_linux::detect_linux_host().expect("linux host detection");
+            assert_eq!(
+                detected.operating_system(),
+                &fabric_host_linux::linux_operating_system()
+            );
+            detected
+        };
+        #[cfg(not(target_os = "linux"))]
+        let host = HostDescriptor::native();
+
         let composition = Fabric::new("onoal.package.test.third-party")
             .expect("fabric")
             .with(fabric_package_key_value::audited_memory_key_value(
@@ -341,10 +353,7 @@ mod tests {
             .any(|relation| relation.role().as_str() == "log"));
 
         let mut instance = composition
-            .materialize_on(
-                "onoal.package.test.third-party.instance",
-                &HostDescriptor::native(),
-            )
+            .materialize_on("onoal.package.test.third-party.instance", &host)
             .expect("instance");
         instance.start().expect("start");
 

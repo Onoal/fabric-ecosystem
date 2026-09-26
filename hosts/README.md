@@ -12,10 +12,10 @@ Host != Component
 Host != Adapter
 ```
 
-A future Host artifact may provide reusable authoring, detection, or
-description of environment facts through Fabric's existing Host model. Examples
-that may later be earned include Linux, macOS, Windows, and synthetic test
-hosts.
+Host artifacts may provide reusable authoring, detection, or description of
+environment facts through Fabric's existing Host model. `hosts/linux` is the
+first real artifact and owns Linux detection, Linux facility identifiers, and
+Linux Host requirements.
 
 The expected future shape is:
 
@@ -28,5 +28,4 @@ hosts/<host>/
 └── tests/
 ```
 
-Do not add a Host artifact until it has real source behavior to own. This
-directory establishes the repository home and ownership law only.
+Do not add a Host artifact until it has real source behavior to own.
