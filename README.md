@@ -39,7 +39,7 @@ Fabric Ecosystem
 - `packages/observability/logging`: a semantic LogSink capability with a local
   console realization for explicit application/system log records.
 - `packages/security/ed25519`: an Ed25519 signing capability with ephemeral
-  live private-key state, public signature evidence, and Component witnesses.
+  live private-key state and public signature evidence.
 - `hosts/linux`: Linux Host detection, Linux facility identifiers, and reusable
   Host requirements using Fabric's existing Host model.
 - `compositions/web/http-server`: the first reusable Composition artifact,

@@ -11,7 +11,7 @@ name = "fabric_package_security_ed25519"
 path = "src/lib.rs"
 
 [dependencies]
-ed25519-dalek = { version = "2.2", features = ["rand_core"] }
+ed25519-dalek = { version = "2.2", features = ["rand_core", "zeroize"] }
 fabric.workspace = true
 rand_core = { version = "0.6", features = ["getrandom"] }
 

@@ -297,11 +297,10 @@ Identis subject. A valid signature proves only that the corresponding private
 key signed the bytes. It does not prove who owns the key or whether the result
 should be trusted.
 
-The package includes `SignedPayloadProducer` as a Component witness: behavior
-may consume the signer Resource through a normal Fabric relation and publish a
-payload plus public evidence. The signer Resource owns the cryptographic
-capability; the Component owns the application behavior that decides what bytes
-to sign.
+Applications consume the signer Resource through ordinary Fabric relations and
+own any signed-envelope shape that combines payload bytes, public key,
+signature, metadata, or provenance. The Ed25519 package owns the cryptographic
+capability and public evidence types, not application release/audit meaning.
 
 ### Counter Metrics
 

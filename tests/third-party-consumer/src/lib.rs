@@ -14,12 +14,21 @@ use fabric_package_process_runtime::{
 use fabric_package_relational_database::{
     RelationalDatabase, RelationalQueryResult, RelationalValue,
 };
-use fabric_package_security_ed25519::{verify_ed25519_signature, Ed25519Signer, SignedPayload};
+use fabric_package_security_ed25519::{
+    verify_ed25519_signature, Ed25519PublicKey, Ed25519Signature, Ed25519Signer,
+};
 
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct ConsumerMetricCounts {
     pub successes: u64,
     pub failures: u64,
+}
+
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct ConsumerSignedPayload {
+    pub payload: Vec<u8>,
+    pub public_key: Ed25519PublicKey,
+    pub signature: Ed25519Signature,
 }
 
 #[derive(Clone, Debug, PartialEq)]
@@ -30,7 +39,7 @@ pub struct ConsumerOutput {
     pub message: Option<QueueMessage>,
     pub transport_observation: TcpTransportInspection,
     pub transport_connect: Result<(), TcpTransportError>,
-    pub signed: SignedPayload,
+    pub signed: ConsumerSignedPayload,
     pub signature_valid: bool,
     pub metric_counts: ConsumerMetricCounts,
     pub database_rows: RelationalQueryResult,
@@ -123,7 +132,7 @@ fabric::component! {
                     .signer
                     .sign(b"third-party-signed".to_vec())
                     .expect("third-party signer signs");
-                let signed = SignedPayload {
+                let signed = ConsumerSignedPayload {
                     payload: b"third-party-signed".to_vec(),
                     public_key,
                     signature,
@@ -132,8 +141,7 @@ fabric::component! {
                     &signed.public_key,
                     &signed.payload,
                     &signed.signature,
-                )
-                .expect("verify third-party signature");
+                );
                 let metric_counts = ConsumerMetricCounts {
                     successes: self.relations().successful_sends.current().map_err(|error| error.to_string())?,
                     failures: self.relations().failed_sends.current().map_err(|error| error.to_string())?,
@@ -561,8 +569,7 @@ mod tests {
             &output.signed.public_key,
             &output.signed.payload,
             &output.signed.signature,
-        )
-        .expect("public verification"));
+        ));
         assert_eq!(
             output.metric_counts,
             ConsumerMetricCounts {
