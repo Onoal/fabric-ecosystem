@@ -8,7 +8,9 @@ use fabric_package_networking_tcp::{
 };
 use fabric_package_observability_counter::{CounterMetric, DualCounterSnapshot};
 use fabric_package_observability_logging::{LogRecord, LogSink};
-use fabric_package_process_runtime::{ExecutionEnvironment, ProcessOutput, ProcessRuntime};
+use fabric_package_process_runtime::{
+    ProcessEnvironmentVariable, ProcessInvocation, ProcessOutput, ProcessRuntime,
+};
 use fabric_package_relational_database::{
     RelationalDatabase, RelationalQueryResult, RelationalValue,
 };
@@ -18,7 +20,6 @@ use fabric_package_security_ed25519::{verify_ed25519_signature, Ed25519Signer, S
 pub struct ConsumerOutput {
     pub stored: Option<Vec<u8>>,
     pub process: ProcessOutput,
-    pub environment: ExecutionEnvironment,
     pub message_send: QueueSendResult,
     pub message: Option<QueueMessage>,
     pub transport_observation: TcpTransportInspection,
@@ -45,7 +46,6 @@ fabric::component! {
                 failed_sends: CounterMetric;
                 database: RelationalDatabase;
                 log: LogSink;
-                environment: fabric_package_process_runtime::LocalExecutionEnvironment;
             }
         }
 
@@ -64,10 +64,23 @@ fabric::component! {
                     .store
                     .get("third-party".to_owned())
                     .map_err(|error| error.to_string())?;
-                let process = self.relations().process.run(
-                    "sh".to_owned(),
-                    vec!["-c".to_owned(), "printf third-party".to_owned()],
-                );
+                let process = self
+                    .relations()
+                    .process
+                    .execute(
+                        ProcessInvocation::new("sh")
+                            .with_args([
+                                "-c",
+                                "printf '%s:%s' \"$1\" \"$ONOAL_THIRD_PARTY_PROCESS\"",
+                                "ignored-script-name",
+                                "third-party",
+                            ])
+                            .with_environment([ProcessEnvironmentVariable::new(
+                                "ONOAL_THIRD_PARTY_PROCESS",
+                                "process",
+                            )]),
+                    )
+                    .map_err(|error| error.to_string())?;
                 let message_send = self
                     .relations()
                     .queue
@@ -149,7 +162,6 @@ fabric::component! {
                 Ok(ConsumerOutput {
                     stored,
                     process,
-                    environment: self.relations().environment.describe(),
                     message_send,
                     message,
                     transport_observation,
@@ -440,7 +452,6 @@ mod tests {
         let composition = Fabric::new("onoal.package.test.third-party")
             .expect("fabric")
             .with(fabric_package_key_value::memory_key_value("primary"))
-            .with(fabric_package_process_runtime::local_execution_environment())
             .with(fabric_package_process_runtime::local_process_runtime(
                 "local",
             ))
@@ -467,7 +478,7 @@ mod tests {
             .expect("composition");
 
         assert_eq!(composition.resources().count(), 9);
-        assert_eq!(composition.systems().count(), 1);
+        assert_eq!(composition.systems().count(), 0);
         assert_eq!(composition.components().count(), 1);
         assert_eq!(
             composition
@@ -528,8 +539,7 @@ mod tests {
 
         assert_eq!(output.stored, Some(b"package-value".to_vec()));
         assert!(output.process.success());
-        assert_eq!(output.process.stdout_utf8(), "third-party");
-        assert!(!output.environment.os.is_empty());
+        assert_eq!(output.process.stdout_utf8(), "third-party:process");
         assert_eq!(output.message_send, QueueSendResult::Accepted);
         assert_eq!(
             output.message,

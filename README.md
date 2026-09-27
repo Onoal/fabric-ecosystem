@@ -26,8 +26,8 @@ Fabric Ecosystem
   semantics with portable value/result/error types.
 - `packages/data/sqlite`: a SQLite realization of `RelationalDatabase` with
   file-backed local persistence.
-- `packages/execution/process-runtime`: a local process execution capability with a
-  real OS-process adapter, execution environment system, and component witness.
+- `packages/execution/process-runtime`: a run-to-completion local process
+  execution capability with invocation, output, and error models.
 - `packages/messaging/queue`: a bounded non-durable FIFO queue capability with
   in-memory live state and producer/consumer component witnesses.
 - `packages/networking/tcp`: a loopback TCP byte-stream transport capability with real

@@ -77,7 +77,9 @@ Packages are grouped by capability ownership:
   semantics.
 - `packages/data/sqlite` owns the first SQLite realization of the relational
   database semantics.
-- `packages/execution/process-runtime` owns local process execution.
+- `packages/execution/process-runtime` owns run-to-completion local process
+  execution. Host OS/architecture truth remains Fabric Host truth, not
+  execution package state.
 - `packages/messaging/queue` owns the first messaging capability: a bounded
   FIFO queue.
 - `packages/networking/tcp` owns the first network/transport capability:
