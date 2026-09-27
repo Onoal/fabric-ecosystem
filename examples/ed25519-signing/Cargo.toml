@@ -4,6 +4,7 @@ version.workspace = true
 edition.workspace = true
 license.workspace = true
 repository.workspace = true
+description = "Runnable Ed25519 signing example for Fabric Ecosystem"
 publish = false
 
 [lib]

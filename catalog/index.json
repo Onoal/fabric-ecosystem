@@ -1,0 +1,300 @@
+{
+  "schemaVersion": 1,
+  "artifacts": [
+    {
+      "kind": "composition",
+      "category": "web",
+      "path": "compositions/web/http-server",
+      "cargoPackage": "onoal-fabric-composition-http-server",
+      "version": "0.1.0",
+      "description": "Reusable HTTP server composition for Fabric Ecosystem",
+      "publishable": true,
+      "readme": "compositions/web/http-server/README.md",
+      "dependencies": {
+        "normal": [
+          "packages/networking/http",
+          "packages/networking/tcp"
+        ],
+        "development": [
+          "packages/data/key-value"
+        ],
+        "build": []
+      }
+    },
+    {
+      "kind": "composition",
+      "category": "web",
+      "path": "compositions/web/local-backend",
+      "cargoPackage": "onoal-fabric-composition-local-backend",
+      "version": "0.1.0",
+      "description": "Reusable local backend foundation composition for Fabric Ecosystem",
+      "publishable": true,
+      "readme": "compositions/web/local-backend/README.md",
+      "dependencies": {
+        "normal": [
+          "compositions/web/http-server",
+          "packages/data/sqlite",
+          "packages/observability/logging"
+        ],
+        "development": [
+          "packages/data/relational-database",
+          "packages/networking/http",
+          "packages/networking/tcp"
+        ],
+        "build": []
+      }
+    },
+    {
+      "kind": "example",
+      "path": "examples/ed25519-signing",
+      "cargoPackage": "fabric-ecosystem-example-ed25519-signing",
+      "version": "0.1.0",
+      "description": "Runnable Ed25519 signing example for Fabric Ecosystem",
+      "publishable": false,
+      "dependencies": {
+        "normal": [
+          "packages/security/ed25519"
+        ],
+        "development": [],
+        "build": []
+      }
+    },
+    {
+      "kind": "example",
+      "path": "examples/http-server",
+      "cargoPackage": "fabric-ecosystem-example-http-server",
+      "version": "0.1.0",
+      "description": "Runnable HTTP server composition example for Fabric Ecosystem",
+      "publishable": false,
+      "dependencies": {
+        "normal": [
+          "compositions/web/http-server",
+          "packages/networking/http",
+          "packages/networking/tcp"
+        ],
+        "development": [],
+        "build": []
+      }
+    },
+    {
+      "kind": "example",
+      "path": "examples/key-value-quickstart",
+      "cargoPackage": "fabric-ecosystem-example-key-value-quickstart",
+      "version": "0.1.0",
+      "description": "Runnable KeyValue quickstart example for Fabric Ecosystem",
+      "publishable": false,
+      "dependencies": {
+        "normal": [
+          "packages/data/key-value"
+        ],
+        "development": [],
+        "build": []
+      }
+    },
+    {
+      "kind": "example",
+      "path": "examples/local-backend",
+      "cargoPackage": "fabric-ecosystem-example-local-backend",
+      "version": "0.1.0",
+      "description": "Runnable local backend composition example for Fabric Ecosystem",
+      "publishable": false,
+      "dependencies": {
+        "normal": [
+          "compositions/web/local-backend",
+          "packages/data/relational-database",
+          "packages/networking/http",
+          "packages/networking/tcp",
+          "packages/observability/logging"
+        ],
+        "development": [],
+        "build": []
+      }
+    },
+    {
+      "kind": "example",
+      "path": "examples/observed-queue",
+      "cargoPackage": "fabric-ecosystem-example-observed-queue",
+      "version": "0.1.0",
+      "description": "Runnable queue and counter observation example for Fabric Ecosystem",
+      "publishable": false,
+      "dependencies": {
+        "normal": [
+          "packages/messaging/queue",
+          "packages/observability/counter"
+        ],
+        "development": [],
+        "build": []
+      }
+    },
+    {
+      "kind": "host",
+      "path": "hosts/linux",
+      "cargoPackage": "onoal-fabric-host-linux",
+      "version": "0.1.0",
+      "description": "Linux Host detection artifact for Fabric",
+      "publishable": true,
+      "readme": "hosts/linux/README.md",
+      "dependencies": {
+        "normal": [],
+        "development": [],
+        "build": []
+      }
+    },
+    {
+      "kind": "package",
+      "category": "data",
+      "path": "packages/data/key-value",
+      "cargoPackage": "onoal-fabric-package-key-value",
+      "version": "0.1.0",
+      "description": "KeyValue capability package for Fabric",
+      "publishable": true,
+      "readme": "packages/data/key-value/README.md",
+      "dependencies": {
+        "normal": [],
+        "development": [],
+        "build": []
+      }
+    },
+    {
+      "kind": "package",
+      "category": "data",
+      "path": "packages/data/relational-database",
+      "cargoPackage": "onoal-fabric-package-relational-database",
+      "version": "0.1.0",
+      "description": "RelationalDatabase semantic capability package for Fabric",
+      "publishable": true,
+      "readme": "packages/data/relational-database/README.md",
+      "dependencies": {
+        "normal": [],
+        "development": [],
+        "build": []
+      }
+    },
+    {
+      "kind": "package",
+      "category": "data",
+      "path": "packages/data/sqlite",
+      "cargoPackage": "onoal-fabric-package-sqlite",
+      "version": "0.1.0",
+      "description": "SQLite realization package for the Fabric RelationalDatabase capability",
+      "publishable": true,
+      "readme": "packages/data/sqlite/README.md",
+      "dependencies": {
+        "normal": [
+          "packages/data/relational-database"
+        ],
+        "development": [],
+        "build": []
+      }
+    },
+    {
+      "kind": "package",
+      "category": "execution",
+      "path": "packages/execution/process-runtime",
+      "cargoPackage": "onoal-fabric-package-process-runtime",
+      "version": "0.1.0",
+      "description": "ProcessRuntime capability package for Fabric",
+      "publishable": true,
+      "readme": "packages/execution/process-runtime/README.md",
+      "dependencies": {
+        "normal": [],
+        "development": [],
+        "build": []
+      }
+    },
+    {
+      "kind": "package",
+      "category": "messaging",
+      "path": "packages/messaging/queue",
+      "cargoPackage": "onoal-fabric-package-messaging-queue",
+      "version": "0.1.0",
+      "description": "FIFO queue messaging capability package for Fabric",
+      "publishable": true,
+      "readme": "packages/messaging/queue/README.md",
+      "dependencies": {
+        "normal": [],
+        "development": [],
+        "build": []
+      }
+    },
+    {
+      "kind": "package",
+      "category": "networking",
+      "path": "packages/networking/http",
+      "cargoPackage": "onoal-fabric-package-networking-http",
+      "version": "0.1.0",
+      "description": "HTTP/1 server behavior package for Fabric over TCP byte streams",
+      "publishable": true,
+      "readme": "packages/networking/http/README.md",
+      "dependencies": {
+        "normal": [
+          "packages/networking/tcp"
+        ],
+        "development": [],
+        "build": []
+      }
+    },
+    {
+      "kind": "package",
+      "category": "networking",
+      "path": "packages/networking/tcp",
+      "cargoPackage": "onoal-fabric-package-networking-tcp",
+      "version": "0.1.0",
+      "description": "TCP byte-stream transport capability package for Fabric",
+      "publishable": true,
+      "readme": "packages/networking/tcp/README.md",
+      "dependencies": {
+        "normal": [],
+        "development": [],
+        "build": []
+      }
+    },
+    {
+      "kind": "package",
+      "category": "observability",
+      "path": "packages/observability/counter",
+      "cargoPackage": "onoal-fabric-package-observability-counter",
+      "version": "0.1.0",
+      "description": "Counter metric observability package for Fabric",
+      "publishable": true,
+      "readme": "packages/observability/counter/README.md",
+      "dependencies": {
+        "normal": [],
+        "development": [
+          "packages/messaging/queue"
+        ],
+        "build": []
+      }
+    },
+    {
+      "kind": "package",
+      "category": "observability",
+      "path": "packages/observability/logging",
+      "cargoPackage": "onoal-fabric-package-observability-logging",
+      "version": "0.1.0",
+      "description": "Semantic logging capability package for Fabric",
+      "publishable": true,
+      "readme": "packages/observability/logging/README.md",
+      "dependencies": {
+        "normal": [],
+        "development": [],
+        "build": []
+      }
+    },
+    {
+      "kind": "package",
+      "category": "security",
+      "path": "packages/security/ed25519",
+      "cargoPackage": "onoal-fabric-package-security-ed25519",
+      "version": "0.1.0",
+      "description": "Ed25519 signing capability package for Fabric",
+      "publishable": true,
+      "readme": "packages/security/ed25519/README.md",
+      "dependencies": {
+        "normal": [],
+        "development": [],
+        "build": []
+      }
+    }
+  ]
+}

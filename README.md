@@ -83,6 +83,10 @@ pedagogical; they are not compatibility fixtures.
 `tests/` contains cross-package integration, compatibility, and third-party
 public-consumer verification.
 
-`catalog/` is reserved for generated or curated discovery views. Catalog
-metadata helps humans and tools find artifacts; it does not duplicate Fabric
-semantic truth.
+`catalog/` contains generated discovery views:
+
+- [catalog/index.md](catalog/index.md) for human navigation.
+- [catalog/index.json](catalog/index.json) for machine-readable discovery.
+
+Catalog metadata helps humans and tools find artifacts; it does not duplicate
+Fabric semantic truth.

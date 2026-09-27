@@ -2,6 +2,7 @@
 name = "fabric-ecosystem-example-local-backend"
 version = "0.1.0"
 edition = "2021"
+description = "Runnable local backend composition example for Fabric Ecosystem"
 publish = false
 
 [dependencies]

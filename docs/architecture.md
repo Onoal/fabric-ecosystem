@@ -537,23 +537,25 @@ public compatibility.
 
 ## Catalog
 
-`catalog/` is reserved for discovery, index, and navigation artifacts. Catalog
-views may later help a CLI, website, documentation generator, or development
-agent answer questions such as:
+`catalog/` contains deterministic discovery projections generated from other
+owners of truth. Cargo metadata owns package name, version, description,
+publishability, and Cargo dependencies. Repository topology owns artifact kind
+and open navigation category. README existence owns whether a README link
+appears. Fabric and Rust source continue to own semantic definitions,
+Composition graphs, Host truth, and runtime behavior.
 
-- which packages exist?
-- which category owns this capability?
-- where are reusable compositions?
-- which Composition categories exist, such as web or messaging?
-- which Composition artifacts consume other Compositions or Packages?
-- which examples teach a package?
-- which tests verify third-party public consumption?
+Catalog metadata may repeat values only as generated projections. Manually
+duplicated semantic truth is prohibited:
 
-Catalog metadata must never become a second semantic source of truth. It must
-not hand-maintain Resource definitions, relations, Adapter compatibility,
-Config, Composition graphs, or live runtime facts. Fabric and Rust source
-truth remain authoritative. A future generated catalog may derive navigation
-views when there is enough real pressure.
+```text
+repository artifact kind != Fabric semantic kind
+Cargo dependency edge != Fabric semantic relation
+```
+
+Catalog v1 does not extract Resource, System, Component, Adapter, Config,
+relation, Host requirement, or Composition graph definitions. A future Catalog
+view may consume a canonical Fabric definition projection, but it must not
+invent a brittle source parser as an alternate semantic owner.
 
 ## Scalability pressure
 

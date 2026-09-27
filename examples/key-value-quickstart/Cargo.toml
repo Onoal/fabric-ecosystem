@@ -2,6 +2,7 @@
 name = "fabric-ecosystem-example-key-value-quickstart"
 version = "0.1.0"
 edition = "2021"
+description = "Runnable KeyValue quickstart example for Fabric Ecosystem"
 publish = false
 
 [dependencies]
