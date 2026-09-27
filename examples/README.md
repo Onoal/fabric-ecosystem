@@ -9,7 +9,8 @@ not verification fixtures.
 Examples may use Packages or reusable Compositions, but they do not own
 reusable ecosystem semantics merely because they are runnable.
 
-- `key-value-quickstart`: a compact storage package quickstart.
+- `key-value-quickstart`: a compact storage package quickstart showing
+  application-owned behavior requiring the `KeyValue` Resource directly.
 - `ed25519-signing`: a compact security package example that materializes an
   ephemeral signer, signs bytes through a Component, verifies the public
   evidence, and stops the Instance.

@@ -71,7 +71,8 @@ live instance observations.
 
 Packages are grouped by capability ownership:
 
-- `packages/data/key-value` owns the KeyValue capability.
+- `packages/data/key-value` owns the fallible textual-key/opaque-byte KeyValue
+  capability and its generation-local in-memory realization.
 - `packages/data/relational-database` owns generic bounded relational database
   semantics.
 - `packages/data/sqlite` owns the first SQLite realization of the relational

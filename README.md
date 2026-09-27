@@ -20,8 +20,8 @@ Fabric Ecosystem
   `-- docs/          architecture and repository guidance
 ```
 
-- `packages/data/key-value`: a semantic KeyValue resource with a stateful in-memory
-  adapter and reusable authoring contributions.
+- `packages/data/key-value`: a fallible textual-key/opaque-byte `KeyValue`
+  capability with a generation-local in-memory realization.
 - `packages/data/relational-database`: generic bounded relational database
   semantics with portable value/result/error types.
 - `packages/data/sqlite`: a SQLite realization of `RelationalDatabase` with

@@ -50,15 +50,20 @@ fabric::component! {
         }
 
         api {
-            fn exercise(&self) -> ConsumerOutput;
+            fn exercise(&self) -> Result<ConsumerOutput, String>;
         }
 
         runtime {
-            fn exercise(&self) -> ConsumerOutput {
+            fn exercise(&self) -> Result<ConsumerOutput, String> {
                 self.relations()
                     .store
-                    .set("third-party".to_owned(), b"package-value".to_vec());
-                let stored = self.relations().store.get("third-party".to_owned());
+                    .set("third-party".to_owned(), b"package-value".to_vec())
+                    .map_err(|error| error.to_string())?;
+                let stored = self
+                    .relations()
+                    .store
+                    .get("third-party".to_owned())
+                    .map_err(|error| error.to_string())?;
                 let process = self.relations().process.run(
                     "sh".to_owned(),
                     vec!["-c".to_owned(), "printf third-party".to_owned()],
@@ -141,7 +146,7 @@ fabric::component! {
                     .log
                     .emit(logged.clone())
                     .expect("third-party emits log record");
-                ConsumerOutput {
+                Ok(ConsumerOutput {
                     stored,
                     process,
                     environment: self.relations().environment.describe(),
@@ -154,7 +159,7 @@ fabric::component! {
                     metric_counts,
                     database_rows,
                     logged,
-                }
+                })
             }
         }
     }
@@ -434,9 +439,7 @@ mod tests {
 
         let composition = Fabric::new("onoal.package.test.third-party")
             .expect("fabric")
-            .with(fabric_package_key_value::audited_memory_key_value(
-                "primary",
-            ))
+            .with(fabric_package_key_value::memory_key_value("primary"))
             .with(fabric_package_process_runtime::local_execution_environment())
             .with(fabric_package_process_runtime::local_process_runtime(
                 "local",
@@ -473,7 +476,7 @@ mod tests {
                 .expect("key-value")
                 .augmentations()
                 .count(),
-            1
+            0
         );
         assert!(composition
             .relations()
@@ -519,7 +522,9 @@ mod tests {
 
         let app = instance.component::<PackageConsumer>().expect("consumer");
         app.reconcile().expect("component reconcile");
-        let output = block_on(app.exercise()).expect("exercise");
+        let output = block_on(app.exercise())
+            .expect("exercise")
+            .expect("package consumer result");
 
         assert_eq!(output.stored, Some(b"package-value".to_vec()));
         assert!(output.process.success());
