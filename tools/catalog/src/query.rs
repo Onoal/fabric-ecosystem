@@ -54,35 +54,19 @@ pub struct Catalog {
 }
 
 impl Catalog {
-    pub(crate) fn new(index: CatalogIndex) -> Result<Self, CatalogError> {
+    pub(crate) fn from_validated(index: CatalogIndex) -> Self {
         let mut by_path = BTreeMap::new();
         let mut by_package = BTreeMap::new();
         for (position, artifact) in index.artifacts.iter().enumerate() {
-            if by_path.insert(artifact.path.clone(), position).is_some() {
-                return Err(CatalogError::new(format!(
-                    "invalid Catalog v1 structure: duplicate artifact path: {}",
-                    artifact.path
-                )));
-            }
-            if by_package
-                .insert(artifact.cargo_package.clone(), position)
-                .is_some()
-            {
-                return Err(CatalogError::new(format!(
-                    "invalid Catalog v1 structure: duplicate Cargo package: {}",
-                    artifact.cargo_package
-                )));
-            }
-            validate_category_invariant(artifact)?;
+            by_path.insert(artifact.path.clone(), position);
+            by_package.insert(artifact.cargo_package.clone(), position);
         }
 
-        let catalog = Self {
+        Self {
             index,
             by_path,
             by_package,
-        };
-        catalog.validate_dependency_references()?;
-        Ok(catalog)
+        }
     }
 
     pub fn artifacts(&self) -> &[CatalogArtifact] {
@@ -148,34 +132,6 @@ impl Catalog {
         });
         Ok(dependents)
     }
-
-    fn validate_dependency_references(&self) -> Result<(), CatalogError> {
-        for artifact in &self.index.artifacts {
-            for kind in DependencyKind::all() {
-                let dependencies = kind.dependencies(&artifact.dependencies);
-                let mut seen = BTreeMap::new();
-                for dependency in dependencies {
-                    if seen.insert(dependency, ()).is_some() {
-                        return Err(CatalogError::new(format!(
-                            "invalid Catalog v1 structure: duplicate {} Cargo dependency reference in {}: {}",
-                            kind.label(),
-                            artifact.path,
-                            dependency
-                        )));
-                    }
-                    if !self.by_path.contains_key(dependency) {
-                        return Err(CatalogError::new(format!(
-                            "invalid Catalog v1 structure: dangling {} Cargo dependency reference in {}: {}",
-                            kind.label(),
-                            artifact.path,
-                            dependency
-                        )));
-                    }
-                }
-            }
-        }
-        Ok(())
-    }
 }
 
 pub(crate) fn parse_artifact_kind(value: &str) -> Result<ArtifactKind, CatalogError> {
@@ -198,30 +154,6 @@ impl FromStr for ArtifactKind {
     }
 }
 
-fn validate_category_invariant(artifact: &CatalogArtifact) -> Result<(), CatalogError> {
-    match artifact.kind {
-        ArtifactKind::Package | ArtifactKind::Composition => {
-            if artifact.category.is_none() {
-                return Err(CatalogError::new(format!(
-                    "invalid Catalog v1 structure: {} requires category: {}",
-                    artifact_kind_label(&artifact.kind),
-                    artifact.path
-                )));
-            }
-        }
-        ArtifactKind::Host | ArtifactKind::Example => {
-            if artifact.category.is_some() {
-                return Err(CatalogError::new(format!(
-                    "invalid Catalog v1 structure: {} must not have category: {}",
-                    artifact_kind_label(&artifact.kind),
-                    artifact.path
-                )));
-            }
-        }
-    }
-    Ok(())
-}
-
 pub(crate) fn artifact_kind_label(kind: &ArtifactKind) -> &'static str {
     match kind {
         ArtifactKind::Package => "package",
@@ -235,6 +167,7 @@ pub(crate) fn artifact_kind_label(kind: &ArtifactKind) -> &'static str {
 mod tests {
     use super::*;
     use crate::model::SCHEMA_VERSION;
+    use crate::validation;
 
     fn artifact(path: &str, kind: ArtifactKind, category: Option<&str>) -> CatalogArtifact {
         CatalogArtifact {
@@ -252,11 +185,12 @@ mod tests {
 
     fn catalog_with(mut artifacts: Vec<CatalogArtifact>) -> Catalog {
         artifacts.sort_by(|left, right| left.path.cmp(&right.path));
-        Catalog::new(CatalogIndex {
+        let index = CatalogIndex {
             schema_version: SCHEMA_VERSION,
             artifacts,
-        })
-        .expect("catalog")
+        };
+        validation::validate_catalog_index(&index).expect("valid catalog fixture");
+        Catalog::from_validated(index)
     }
 
     #[test]
@@ -335,92 +269,5 @@ mod tests {
         assert_eq!(dependents[0].kind, DependencyKind::Development);
         assert_eq!(dependents[1].artifact.path, "packages/networking/http");
         assert_eq!(dependents[1].kind, DependencyKind::Normal);
-    }
-
-    #[test]
-    fn structural_validation_rejects_duplicate_identity_and_bad_references() {
-        let first = artifact("hosts/linux", ArtifactKind::Host, None);
-        let mut duplicate_path = artifact("hosts/linux", ArtifactKind::Host, None);
-        duplicate_path.cargo_package = "different".to_owned();
-        assert!(Catalog::new(CatalogIndex {
-            schema_version: SCHEMA_VERSION,
-            artifacts: vec![first.clone(), duplicate_path],
-        })
-        .unwrap_err()
-        .to_string()
-        .contains("duplicate artifact path: hosts/linux"));
-
-        let mut duplicate_package = artifact(
-            "packages/data/key-value",
-            ArtifactKind::Package,
-            Some("data"),
-        );
-        duplicate_package.cargo_package = first.cargo_package.clone();
-        assert!(Catalog::new(CatalogIndex {
-            schema_version: SCHEMA_VERSION,
-            artifacts: vec![first.clone(), duplicate_package],
-        })
-        .unwrap_err()
-        .to_string()
-        .contains("duplicate Cargo package"));
-
-        let mut dangling = artifact(
-            "packages/networking/http",
-            ArtifactKind::Package,
-            Some("networking"),
-        );
-        dangling.dependencies.normal = vec!["packages/networking/tcp".to_owned()];
-        assert!(Catalog::new(CatalogIndex {
-            schema_version: SCHEMA_VERSION,
-            artifacts: vec![dangling],
-        })
-        .unwrap_err()
-        .to_string()
-        .contains("dangling normal Cargo dependency reference"));
-
-        let mut duplicate_dependency = artifact(
-            "packages/networking/http",
-            ArtifactKind::Package,
-            Some("networking"),
-        );
-        duplicate_dependency.dependencies.normal = vec![
-            "packages/networking/tcp".to_owned(),
-            "packages/networking/tcp".to_owned(),
-        ];
-        let tcp = artifact(
-            "packages/networking/tcp",
-            ArtifactKind::Package,
-            Some("networking"),
-        );
-        assert!(Catalog::new(CatalogIndex {
-            schema_version: SCHEMA_VERSION,
-            artifacts: vec![duplicate_dependency, tcp],
-        })
-        .unwrap_err()
-        .to_string()
-        .contains("duplicate normal Cargo dependency reference"));
-    }
-
-    #[test]
-    fn structural_validation_rejects_category_invariant_violations() {
-        assert!(Catalog::new(CatalogIndex {
-            schema_version: SCHEMA_VERSION,
-            artifacts: vec![artifact(
-                "packages/data/key-value",
-                ArtifactKind::Package,
-                None
-            )],
-        })
-        .unwrap_err()
-        .to_string()
-        .contains("package requires category"));
-
-        assert!(Catalog::new(CatalogIndex {
-            schema_version: SCHEMA_VERSION,
-            artifacts: vec![artifact("hosts/linux", ArtifactKind::Host, Some("os"))],
-        })
-        .unwrap_err()
-        .to_string()
-        .contains("host must not have category"));
     }
 }

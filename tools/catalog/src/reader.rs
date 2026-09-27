@@ -24,7 +24,7 @@ pub(crate) fn read_catalog_str(content: &str) -> Result<Catalog, CatalogError> {
         )));
     }
     validation::validate_catalog_index(&index)?;
-    Catalog::new(index)
+    Ok(Catalog::from_validated(index))
 }
 
 #[cfg(test)]
