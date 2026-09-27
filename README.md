@@ -35,7 +35,7 @@ Fabric Ecosystem
 - `packages/networking/http`: HTTP/1 server behavior layered over the TCP
   byte-stream capability.
 - `packages/observability/counter`: a monotonic counter metric capability with
-  in-memory live telemetry state and instrumentation Component witnesses.
+  in-memory live telemetry state.
 - `packages/observability/logging`: a semantic LogSink capability with a local
   console realization for explicit application/system log records.
 - `packages/security/ed25519`: an Ed25519 signing capability with ephemeral

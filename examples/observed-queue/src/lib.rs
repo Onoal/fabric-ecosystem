@@ -2,7 +2,13 @@
 
 use fabric::prelude::*;
 use fabric_package_messaging_queue::{FifoQueue, QueueSendResult};
-use fabric_package_observability_counter::{in_memory_counter, CounterMetric, DualCounterSnapshot};
+use fabric_package_observability_counter::{in_memory_counter, CounterError, CounterMetric};
+
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct ObservedQueueCounts {
+    pub successes: u64,
+    pub failures: u64,
+}
 
 fabric::component! {
     pub ObservedQueueProducer {
@@ -17,29 +23,29 @@ fabric::component! {
         }
 
         api {
-            fn send_observed(&self, payload: Vec<u8>) -> QueueSendResult;
-            fn observed_counts(&self) -> DualCounterSnapshot;
+            fn send_observed(&self, payload: Vec<u8>) -> Result<QueueSendResult, CounterError>;
+            fn observed_counts(&self) -> Result<ObservedQueueCounts, CounterError>;
         }
 
         runtime {
-            fn send_observed(&self, payload: Vec<u8>) -> QueueSendResult {
+            fn send_observed(&self, payload: Vec<u8>) -> Result<QueueSendResult, CounterError> {
                 let result = self.relations().queue.send(payload);
                 match result {
                     QueueSendResult::Accepted => {
-                        let _ = self.relations().successes.increment(1);
+                        let _ = self.relations().successes.increment(1)?;
                     }
                     QueueSendResult::Full { .. } => {
-                        let _ = self.relations().failures.increment(1);
+                        let _ = self.relations().failures.increment(1)?;
                     }
                 }
-                result
+                Ok(result)
             }
 
-            fn observed_counts(&self) -> DualCounterSnapshot {
-                DualCounterSnapshot {
-                    successes: self.relations().successes.current(),
-                    failures: self.relations().failures.current(),
-                }
+            fn observed_counts(&self) -> Result<ObservedQueueCounts, CounterError> {
+                Ok(ObservedQueueCounts {
+                    successes: self.relations().successes.current()?,
+                    failures: self.relations().failures.current()?,
+                })
             }
         }
     }
@@ -74,7 +80,7 @@ pub fn observed_queue_producer() -> impl IntoFabricContribution {
     FabricContribution::new().component(component)
 }
 
-pub fn run() -> Result<DualCounterSnapshot, Box<dyn std::error::Error>> {
+pub fn run() -> Result<ObservedQueueCounts, Box<dyn std::error::Error>> {
     let composition = Fabric::new("fabric.ecosystem.example.observed-queue")?
         .with(fabric_package_messaging_queue::memory_queue("events", 1)?)
         .with(in_memory_counter("successful-sends"))
@@ -91,14 +97,14 @@ pub fn run() -> Result<DualCounterSnapshot, Box<dyn std::error::Error>> {
     let producer = instance.component::<ObservedQueueProducer>()?;
     producer.reconcile()?;
     assert_eq!(
-        futures::executor::block_on(producer.send_observed(b"first".to_vec()))?,
+        futures::executor::block_on(producer.send_observed(b"first".to_vec()))??,
         QueueSendResult::Accepted
     );
     assert_eq!(
-        futures::executor::block_on(producer.send_observed(b"second".to_vec()))?,
+        futures::executor::block_on(producer.send_observed(b"second".to_vec()))??,
         QueueSendResult::Full { capacity: 1 }
     );
-    let counts = futures::executor::block_on(producer.observed_counts())?;
+    let counts = futures::executor::block_on(producer.observed_counts())??;
 
     instance.stop()?;
     Ok(counts)
@@ -112,7 +118,7 @@ mod tests {
     fn example_builds_materializes_records_metrics_and_stops() {
         assert_eq!(
             run().expect("observed queue example"),
-            DualCounterSnapshot {
+            ObservedQueueCounts {
                 successes: 1,
                 failures: 1
             }

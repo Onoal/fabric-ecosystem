@@ -6,7 +6,7 @@ use fabric_package_messaging_queue::{FifoQueue, QueueMessage, QueueSendResult};
 use fabric_package_networking_tcp::{
     TcpByteStreamTransport, TcpConnectResult, TcpTransportError, TcpTransportInspection,
 };
-use fabric_package_observability_counter::{CounterMetric, DualCounterSnapshot};
+use fabric_package_observability_counter::CounterMetric;
 use fabric_package_observability_logging::{LogRecord, LogSink};
 use fabric_package_process_runtime::{
     ProcessEnvironmentVariable, ProcessInvocation, ProcessOutput, ProcessRuntime,
@@ -15,6 +15,12 @@ use fabric_package_relational_database::{
     RelationalDatabase, RelationalQueryResult, RelationalValue,
 };
 use fabric_package_security_ed25519::{verify_ed25519_signature, Ed25519Signer, SignedPayload};
+
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct ConsumerMetricCounts {
+    pub successes: u64,
+    pub failures: u64,
+}
 
 #[derive(Clone, Debug, PartialEq)]
 pub struct ConsumerOutput {
@@ -26,7 +32,7 @@ pub struct ConsumerOutput {
     pub transport_connect: Result<(), TcpTransportError>,
     pub signed: SignedPayload,
     pub signature_valid: bool,
-    pub metric_counts: DualCounterSnapshot,
+    pub metric_counts: ConsumerMetricCounts,
     pub database_rows: RelationalQueryResult,
     pub logged: LogRecord,
 }
@@ -87,10 +93,10 @@ fabric::component! {
                     .send(b"third-party-message".to_vec());
                 match message_send {
                     QueueSendResult::Accepted => {
-                        let _ = self.relations().successful_sends.increment(1);
+                        let _ = self.relations().successful_sends.increment(1).map_err(|error| error.to_string())?;
                     }
                     QueueSendResult::Full { .. } => {
-                        let _ = self.relations().failed_sends.increment(1);
+                        let _ = self.relations().failed_sends.increment(1).map_err(|error| error.to_string())?;
                     }
                 }
                 let message = self.relations().queue.try_receive();
@@ -128,9 +134,9 @@ fabric::component! {
                     &signed.signature,
                 )
                 .expect("verify third-party signature");
-                let metric_counts = DualCounterSnapshot {
-                    successes: self.relations().successful_sends.current(),
-                    failures: self.relations().failed_sends.current(),
+                let metric_counts = ConsumerMetricCounts {
+                    successes: self.relations().successful_sends.current().map_err(|error| error.to_string())?,
+                    failures: self.relations().failed_sends.current().map_err(|error| error.to_string())?,
                 };
                 self.relations().database.execute(
                     "CREATE TABLE IF NOT EXISTS third_party_items (id INTEGER, name TEXT NOT NULL)".to_owned(),
@@ -559,7 +565,7 @@ mod tests {
         .expect("public verification"));
         assert_eq!(
             output.metric_counts,
-            DualCounterSnapshot {
+            ConsumerMetricCounts {
                 successes: 1,
                 failures: 0
             }

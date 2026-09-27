@@ -315,8 +315,10 @@ this first model; there is no separate metric registry, label system, or
 The model is intentionally small:
 
 - A counter starts at zero for a fresh in-memory generation.
-- `increment(amount)` adds a non-negative `u64` amount.
-- `current()` reads the current aggregate value.
+- `increment(amount)` attempts to add a non-negative `u64` amount and returns a
+  package-owned operation result/error.
+- `current()` reads the current aggregate value through the package-owned error
+  boundary.
 - There is no decrement, arbitrary set, or hidden reset during a running
   generation.
 - Overflow is explicit: an increment that would exceed `u64::MAX` returns
