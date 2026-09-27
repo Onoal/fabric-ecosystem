@@ -1,40 +1,40 @@
-use serde::Serialize;
+use serde::{Deserialize, Serialize};
 
 pub(crate) const SCHEMA_VERSION: u8 = 1;
 
-#[derive(Clone, Debug, Serialize, PartialEq, Eq)]
+#[derive(Clone, Debug, Deserialize, Serialize, PartialEq, Eq)]
 #[serde(rename_all = "camelCase")]
-pub(crate) struct CatalogIndex {
+pub struct CatalogIndex {
     pub(crate) schema_version: u8,
     pub(crate) artifacts: Vec<CatalogArtifact>,
 }
 
-#[derive(Clone, Debug, Serialize, PartialEq, Eq)]
+#[derive(Clone, Debug, Deserialize, Serialize, PartialEq, Eq)]
 #[serde(rename_all = "camelCase")]
-pub(crate) struct CatalogArtifact {
-    pub(crate) kind: ArtifactKind,
+pub struct CatalogArtifact {
+    pub kind: ArtifactKind,
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub(crate) category: Option<String>,
-    pub(crate) path: String,
-    pub(crate) cargo_package: String,
-    pub(crate) version: String,
-    pub(crate) description: String,
-    pub(crate) publishable: bool,
+    pub category: Option<String>,
+    pub path: String,
+    pub cargo_package: String,
+    pub version: String,
+    pub description: String,
+    pub publishable: bool,
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub(crate) readme: Option<String>,
-    pub(crate) dependencies: CatalogDependencies,
+    pub readme: Option<String>,
+    pub dependencies: CatalogDependencies,
 }
 
-#[derive(Clone, Debug, Default, Serialize, PartialEq, Eq)]
-pub(crate) struct CatalogDependencies {
-    pub(crate) normal: Vec<String>,
-    pub(crate) development: Vec<String>,
-    pub(crate) build: Vec<String>,
+#[derive(Clone, Debug, Default, Deserialize, Serialize, PartialEq, Eq)]
+pub struct CatalogDependencies {
+    pub normal: Vec<String>,
+    pub development: Vec<String>,
+    pub build: Vec<String>,
 }
 
-#[derive(Clone, Debug, PartialEq, Eq, PartialOrd, Ord, Serialize)]
+#[derive(Clone, Debug, Deserialize, PartialEq, Eq, PartialOrd, Ord, Serialize)]
 #[serde(rename_all = "kebab-case")]
-pub(crate) enum ArtifactKind {
+pub enum ArtifactKind {
     Package,
     Host,
     Composition,

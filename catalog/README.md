@@ -34,6 +34,26 @@ cargo run -p fabric-ecosystem-catalog-tool -- check
 
 Workspace tests also run the same drift check.
 
+## Consuming Catalog v1
+
+`index.json` is the machine-readable Catalog contract. Local query commands read
+the committed JSON projection directly; they do not run Cargo metadata, inspect
+Rust/Fabric source, or materialize runtime state.
+
+```sh
+cargo run -p fabric-ecosystem-catalog-tool -- list
+cargo run -p fabric-ecosystem-catalog-tool -- list-kind package
+cargo run -p fabric-ecosystem-catalog-tool -- list-category networking
+cargo run -p fabric-ecosystem-catalog-tool -- show packages/networking/http
+cargo run -p fabric-ecosystem-catalog-tool -- show-package onoal-fabric-package-networking-http
+cargo run -p fabric-ecosystem-catalog-tool -- deps compositions/web/http-server
+cargo run -p fabric-ecosystem-catalog-tool -- dependents packages/networking/tcp
+```
+
+Query commands show the committed projection as-is. `check` remains the command
+that validates whether committed output is fresh relative to repository/Cargo
+sources.
+
 ## JSON V1
 
 `index.json` uses:

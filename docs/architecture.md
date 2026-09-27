@@ -557,6 +557,17 @@ relation, Host requirement, or Composition graph definitions. A future Catalog
 view may consume a canonical Fabric definition projection, but it must not
 invent a brittle source parser as an alternate semantic owner.
 
+Catalog generation and Catalog consumption are separate:
+
+```text
+source truth -> generation -> catalog/index.json
+catalog/index.json -> consumption -> CLI / website / agents
+```
+
+Consumers may derive navigation results such as reverse Cargo dependency edges
+from the committed JSON document. Those query results do not become persisted
+Catalog truth.
+
 ## Scalability pressure
 
 The repository contract has obvious homes for later artifacts without changing
