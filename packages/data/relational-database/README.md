@@ -1,39 +1,75 @@
-# RelationalDatabase
+# RelationalDatabase Package
 
-`RelationalDatabase` is the generic relational database capability package for
-Fabric.
+`onoal-fabric-package-relational-database` provides one Fabric Resource:
 
-It owns one semantic Resource: a named relational database occurrence through
-which a consumer can perform a bounded set of SQL-style operations.
+```text
+RelationalDatabase
+```
 
-## API
+It represents a named relational database capability through which consumers
+can execute backend-understood relational statements and query portable rows and
+values.
+
+## Semantic Boundary
 
 The Resource exposes:
 
 ```text
-execute(statement, parameters) -> changed row count
-query(statement, parameters) -> rows
+execute(statement, parameters) -> Result<changed row count, RelationalDatabaseError>
+query(statement, parameters)   -> Result<RelationalQueryResult, RelationalDatabaseError>
 ```
 
-Parameters and returned values use package-owned portable types:
+`execute` is for statements that do not return a row result set. `query` is for
+statements that return rows.
+
+## Statement / Dialect Law
+
+This package owns the portable invocation and result shape. It does not own a
+portable SQL dialect.
+
+Statement text is interpreted by the selected realization/backend. Tests use
+simple SQL deliberately, but arbitrary vendor-specific SQL strings are not
+guaranteed to work across all future realizations.
+
+This package does not provide a SQL parser, query builder, schema DSL, or
+Fabric-owned query language.
+
+## Portable Values
+
+Parameters and returned values use a small package-owned intersection:
 
 - `Null`
-- `Integer`
-- `Real`
-- `Text`
-- `Bytes`
+- `Integer(i64)`
+- `Real(f64)`
+- `Text(String)`
+- `Bytes(Vec<u8>)`
 
-The result model is deliberately small. Rows are ordered lists of values; this
-package is not an ORM and does not model entities.
+Backend-specific types such as SQLite affinities, PostgreSQL UUIDs, JSONB,
+dates, timestamps, decimals, and arrays require future semantic pressure.
 
-## SQL Boundary
+## Query Results
 
-The API is portable. Arbitrary SQL text is not guaranteed to be portable across
-all future database realizations. Package tests use intentionally simple SQL so
-that a future PostgreSQL realization can pressure the same semantic surface.
+`RelationalQueryResult` contains ordered `RelationalRow` values. Rows currently
+expose positional values only.
 
-This package does not provide a SQL parser, query builder, schema migration
-framework, or Fabric-owned database language.
+Column metadata is deliberately deferred for v1. Positional rows are sufficient
+for the current bounded capability because consumers control the statement they
+send and can select columns in a known order. Portable column identity, declared
+types, and schema introspection require separate pressure.
+
+## Error Boundary
+
+Operation errors are package-owned:
+
+- `ExecuteFailed`
+- `QueryFailed`
+- `NotStarted`
+- `Stopped`
+
+Open/start failures belong to Adapter lifecycle and surface as Fabric lifecycle
+errors, not `RelationalDatabaseError`. A live realization translates statement
+execution/query failures into `RelationalDatabaseError` without leaking backend
+implementation error types.
 
 ## Realizations
 
@@ -46,21 +82,25 @@ RelationalDatabase
 └── future third-party Adapter
 ```
 
-A realization may expose its own Adapter Config. Backend-specific facts such as
-database file paths or cloud provider settings do not belong to the generic
-Resource Config.
+Backend-specific facts such as database file paths, in-memory mode, remote
+connection strings, or cloud provider settings belong to realization config, not
+to the generic Resource.
 
-## Non-goals
+## Consumer Pattern
+
+Consumer-owned Components should require `RelationalDatabase` directly and own
+their own application/database behavior.
+
+## Non-Goals
 
 This package deliberately does not model:
 
-- ORM behavior
-- schema migrations
-- connection pools
-- replication
-- backups
-- distributed database semantics
-- transactions beyond what the current API exposes
-- PostgreSQL-specific semantics
-- SQLite-specific semantics
-- cloud provider semantics
+- ORM behavior;
+- schema migrations;
+- query builders;
+- portable SQL dialect normalization;
+- structured transaction ownership;
+- connection pools;
+- distributed database semantics;
+- database discovery;
+- SQLite-specific semantics.
