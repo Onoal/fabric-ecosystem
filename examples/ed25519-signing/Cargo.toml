@@ -7,9 +7,6 @@ repository.workspace = true
 description = "Runnable Ed25519 signing example for Fabric Ecosystem"
 publish = false
 
-[lib]
-path = "src/lib.rs"
-
 [dependencies]
 fabric.workspace = true
 fabric-package-security-ed25519.workspace = true

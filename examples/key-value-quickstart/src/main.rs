@@ -1,13 +1,11 @@
-//! KeyValue quickstart example for Fabric Ecosystem.
-
 use fabric::prelude::*;
 use fabric_package_key_value::{memory_key_value, KeyValue, KeyValueError};
 
 #[derive(Clone, Debug, PartialEq, Eq)]
-pub struct QuickstartResult {
-    pub stored: Option<Vec<u8>>,
-    pub deleted: Option<Vec<u8>>,
-    pub after_delete: Option<Vec<u8>>,
+struct QuickstartResult {
+    stored: Option<Vec<u8>>,
+    deleted: Option<Vec<u8>>,
+    after_delete: Option<Vec<u8>>,
 }
 
 fabric::component! {
@@ -40,19 +38,7 @@ fabric::component! {
     }
 }
 
-fn quickstart_app(store_name: &'static str) -> impl IntoFabricContribution {
-    let store = KeyValue::select(store_name).expect("valid KeyValue resource name");
-    let component = QuickstartApp::define().select_named_resource_provider(
-        &fabric::authoring::ComponentResourceRequirement::new(
-            fabric::component::ComponentRelationName::new("store").expect("role"),
-            fabric::authoring::Requires::<KeyValue>::provisional(),
-        ),
-        &store,
-    );
-    FabricContribution::new().component(component)
-}
-
-pub fn run() -> Result<QuickstartResult, Box<dyn std::error::Error>> {
+fn main() -> Result<(), Box<dyn std::error::Error>> {
     let composition = Fabric::new("fabric.ecosystem.example.key-value")?
         .with(memory_key_value("primary"))
         .with(quickstart_app("primary"))
@@ -71,18 +57,38 @@ pub fn run() -> Result<QuickstartResult, Box<dyn std::error::Error>> {
     )??;
 
     instance.stop()?;
-    Ok(result)
+
+    println!(
+        "stored: {}",
+        display_optional_bytes(result.stored.as_deref())
+    );
+    println!(
+        "deleted: {}",
+        display_optional_bytes(result.deleted.as_deref())
+    );
+    println!(
+        "after delete: {}",
+        display_optional_bytes(result.after_delete.as_deref())
+    );
+
+    Ok(())
 }
 
-#[cfg(test)]
-mod tests {
-    use super::*;
+fn quickstart_app(store_name: &'static str) -> impl IntoFabricContribution {
+    let store = KeyValue::select(store_name).expect("valid KeyValue resource name");
+    let component = QuickstartApp::define().select_named_resource_provider(
+        &fabric::authoring::ComponentResourceRequirement::new(
+            fabric::component::ComponentRelationName::new("store").expect("role"),
+            fabric::authoring::Requires::<KeyValue>::provisional(),
+        ),
+        &store,
+    );
+    FabricContribution::new().component(component)
+}
 
-    #[test]
-    fn quickstart_builds_materializes_invokes_and_stops() {
-        let result = run().expect("quickstart");
-        assert_eq!(result.stored, Some(b"fabric".to_vec()));
-        assert_eq!(result.deleted, Some(b"fabric".to_vec()));
-        assert_eq!(result.after_delete, None);
+fn display_optional_bytes(value: Option<&[u8]>) -> String {
+    match value {
+        Some(bytes) => String::from_utf8_lossy(bytes).into_owned(),
+        None => "missing".to_owned(),
     }
 }

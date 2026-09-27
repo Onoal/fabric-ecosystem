@@ -521,10 +521,12 @@ be created before real variants exist.
 
 ## Examples
 
-`examples/` contains pedagogical artifacts. An Example may demonstrate raw
-Fabric, one Package, multiple Packages, a reusable Composition, lifecycle, or
-Instance behavior. Example ownership is teaching ownership, not semantic
-ownership.
+`examples/` contains runnable teaching applications. An Example may demonstrate
+raw Fabric, one Package, multiple Packages, a reusable Composition, lifecycle,
+or Instance behavior. Its primary developer action is `cargo run -p ...`.
+
+Example ownership is teaching/application ownership, not semantic ownership. An
+Example binary is not a reusable library/package and not a verification fixture.
 
 Compatibility and integration fixtures remain under `tests/`.
 

@@ -7,9 +7,6 @@ repository.workspace = true
 description = "Runnable queue and counter observation example for Fabric Ecosystem"
 publish = false
 
-[lib]
-path = "src/lib.rs"
-
 [dependencies]
 fabric.workspace = true
 fabric-package-messaging-queue.workspace = true

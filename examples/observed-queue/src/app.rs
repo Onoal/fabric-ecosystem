@@ -1,13 +1,11 @@
-//! Observed queue example for Fabric Ecosystem.
-
 use fabric::prelude::*;
 use fabric_package_messaging_queue::{FifoQueue, QueueSendResult};
-use fabric_package_observability_counter::{in_memory_counter, CounterError, CounterMetric};
+use fabric_package_observability_counter::{CounterError, CounterMetric};
 
 #[derive(Clone, Debug, PartialEq, Eq)]
-pub struct ObservedQueueCounts {
-    pub successes: u64,
-    pub failures: u64,
+pub(crate) struct ObservedQueueCounts {
+    pub(crate) successes: u64,
+    pub(crate) failures: u64,
 }
 
 fabric::component! {
@@ -51,10 +49,10 @@ fabric::component! {
     }
 }
 
-pub fn observed_queue_producer() -> impl IntoFabricContribution {
-    let queue = FifoQueue::select("events").expect("queue selection");
-    let successes = CounterMetric::select("successful-sends").expect("success counter");
-    let failures = CounterMetric::select("failed-sends").expect("failure counter");
+pub(crate) fn observed_queue_producer() -> impl IntoFabricContribution {
+    let queue = FifoQueue::select("events").expect("valid queue resource name");
+    let successes = CounterMetric::select("successful-sends").expect("valid success counter name");
+    let failures = CounterMetric::select("failed-sends").expect("valid failure counter name");
     let component = ObservedQueueProducer::define()
         .select_named_resource_provider(
             &fabric::authoring::ComponentResourceRequirement::new(
@@ -78,50 +76,4 @@ pub fn observed_queue_producer() -> impl IntoFabricContribution {
             &failures,
         );
     FabricContribution::new().component(component)
-}
-
-pub fn run() -> Result<ObservedQueueCounts, Box<dyn std::error::Error>> {
-    let composition = Fabric::new("fabric.ecosystem.example.observed-queue")?
-        .with(fabric_package_messaging_queue::memory_queue("events", 1)?)
-        .with(in_memory_counter("successful-sends"))
-        .with(in_memory_counter("failed-sends"))
-        .with(observed_queue_producer())
-        .build()?;
-
-    let mut instance = composition.materialize_on(
-        "fabric.ecosystem.example.observed-queue.local",
-        &HostDescriptor::native(),
-    )?;
-    instance.start()?;
-
-    let producer = instance.component::<ObservedQueueProducer>()?;
-    producer.reconcile()?;
-    assert_eq!(
-        futures::executor::block_on(producer.send_observed(b"first".to_vec()))??,
-        QueueSendResult::Accepted
-    );
-    assert_eq!(
-        futures::executor::block_on(producer.send_observed(b"second".to_vec()))??,
-        QueueSendResult::Full { capacity: 1 }
-    );
-    let counts = futures::executor::block_on(producer.observed_counts())??;
-
-    instance.stop()?;
-    Ok(counts)
-}
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn example_builds_materializes_records_metrics_and_stops() {
-        assert_eq!(
-            run().expect("observed queue example"),
-            ObservedQueueCounts {
-                successes: 1,
-                failures: 1
-            }
-        );
-    }
 }

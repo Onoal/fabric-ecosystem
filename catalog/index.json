@@ -51,6 +51,7 @@
       "version": "0.1.0",
       "description": "Runnable Ed25519 signing example for Fabric Ecosystem",
       "publishable": false,
+      "readme": "examples/ed25519-signing/README.md",
       "dependencies": {
         "normal": [
           "packages/security/ed25519"
@@ -66,6 +67,7 @@
       "version": "0.1.0",
       "description": "Runnable HTTP server composition example for Fabric Ecosystem",
       "publishable": false,
+      "readme": "examples/http-server/README.md",
       "dependencies": {
         "normal": [
           "compositions/web/http-server",
@@ -83,6 +85,7 @@
       "version": "0.1.0",
       "description": "Runnable KeyValue quickstart example for Fabric Ecosystem",
       "publishable": false,
+      "readme": "examples/key-value-quickstart/README.md",
       "dependencies": {
         "normal": [
           "packages/data/key-value"
@@ -98,6 +101,7 @@
       "version": "0.1.0",
       "description": "Runnable local backend composition example for Fabric Ecosystem",
       "publishable": false,
+      "readme": "examples/local-backend/README.md",
       "dependencies": {
         "normal": [
           "compositions/web/local-backend",
@@ -117,6 +121,7 @@
       "version": "0.1.0",
       "description": "Runnable queue and counter observation example for Fabric Ecosystem",
       "publishable": false,
+      "readme": "examples/observed-queue/README.md",
       "dependencies": {
         "normal": [
           "packages/messaging/queue",

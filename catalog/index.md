@@ -48,9 +48,9 @@ Schema version: `1`
 
 ## Examples
 
-- [ed25519-signing](../examples/ed25519-signing) — Runnable Ed25519 signing example for Fabric Ecosystem
-- [http-server](../examples/http-server) — Runnable HTTP server composition example for Fabric Ecosystem
-- [key-value-quickstart](../examples/key-value-quickstart) — Runnable KeyValue quickstart example for Fabric Ecosystem
-- [local-backend](../examples/local-backend) — Runnable local backend composition example for Fabric Ecosystem
-- [observed-queue](../examples/observed-queue) — Runnable queue and counter observation example for Fabric Ecosystem
+- [ed25519-signing](../examples/ed25519-signing) — Runnable Ed25519 signing example for Fabric Ecosystem ([README](../examples/ed25519-signing/README.md))
+- [http-server](../examples/http-server) — Runnable HTTP server composition example for Fabric Ecosystem ([README](../examples/http-server/README.md))
+- [key-value-quickstart](../examples/key-value-quickstart) — Runnable KeyValue quickstart example for Fabric Ecosystem ([README](../examples/key-value-quickstart/README.md))
+- [local-backend](../examples/local-backend) — Runnable local backend composition example for Fabric Ecosystem ([README](../examples/local-backend/README.md))
+- [observed-queue](../examples/observed-queue) — Runnable queue and counter observation example for Fabric Ecosystem ([README](../examples/observed-queue/README.md))
 
