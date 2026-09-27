@@ -406,6 +406,11 @@ Host != Resource != System != Component != Adapter
 Linux facility identifiers, and reusable Linux `HostRequirement` helpers while
 returning ordinary Fabric `HostDescriptor` values.
 
+Host artifacts project environment evidence into Fabric's canonical Host model.
+They do not create parallel Host ontology, realization policy, or semantic
+capabilities. Detection mechanisms may remain private even when the detected
+facility identifiers are stable public vocabulary.
+
 Future examples may include macOS, Windows, or synthetic test Host descriptors
 when real pressure exists. The default shape is:
 

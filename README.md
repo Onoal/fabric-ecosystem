@@ -70,8 +70,9 @@ Package topology is domain-first. It is intentionally not split into
 may contain all of those Fabric authoring forms.
 
 `hosts/` is reserved for reusable environment artifacts built on Fabric's
-existing Host model. Host artifacts are not Resources, Systems, Components, or
-Adapters.
+existing Host model. Host artifacts project evidence into ordinary
+`HostDescriptor` / `HostRequirement` truth; they are not Resources, Systems,
+Components, Adapters, or parallel Host ontologies.
 
 `compositions/` contains coherent reusable assembled systems. It is not a
 package bucket and not a second Fabric runtime primitive.
