@@ -3,14 +3,14 @@ use serde::{Deserialize, Serialize};
 pub(crate) const SCHEMA_VERSION: u8 = 1;
 
 #[derive(Clone, Debug, Deserialize, Serialize, PartialEq, Eq)]
-#[serde(rename_all = "camelCase")]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
 pub struct CatalogIndex {
     pub(crate) schema_version: u8,
     pub(crate) artifacts: Vec<CatalogArtifact>,
 }
 
 #[derive(Clone, Debug, Deserialize, Serialize, PartialEq, Eq)]
-#[serde(rename_all = "camelCase")]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
 pub struct CatalogArtifact {
     pub kind: ArtifactKind,
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -26,6 +26,7 @@ pub struct CatalogArtifact {
 }
 
 #[derive(Clone, Debug, Default, Deserialize, Serialize, PartialEq, Eq)]
+#[serde(deny_unknown_fields)]
 pub struct CatalogDependencies {
     pub normal: Vec<String>,
     pub development: Vec<String>,

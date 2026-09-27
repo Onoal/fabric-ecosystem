@@ -568,6 +568,12 @@ Consumers may derive navigation results such as reverse Cargo dependency edges
 from the committed JSON document. Those query results do not become persisted
 Catalog truth.
 
+Catalog schema evolution is explicit and versioned. A v1 consumer does not
+best-effort unknown persisted meaning: unknown fields, new persisted artifact
+kinds, changed field meanings, or changed identity/reference rules require a
+new schema version. Derived query behavior over existing v1 fields may evolve
+without changing the document contract.
+
 ## Scalability pressure
 
 The repository contract has obvious homes for later artifacts without changing

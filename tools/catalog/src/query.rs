@@ -21,7 +21,7 @@ impl DependencyKind {
         }
     }
 
-    fn dependencies<'a>(&self, dependencies: &'a CatalogDependencies) -> &'a [String] {
+    pub(crate) fn dependencies<'a>(&self, dependencies: &'a CatalogDependencies) -> &'a [String] {
         match self {
             Self::Normal => &dependencies.normal,
             Self::Development => &dependencies.development,

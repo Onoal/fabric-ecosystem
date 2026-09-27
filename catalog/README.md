@@ -34,6 +34,21 @@ cargo run -p fabric-ecosystem-catalog-tool -- check
 
 Workspace tests also run the same drift check.
 
+Validate the committed machine document without source discovery:
+
+```sh
+cargo run -p fabric-ecosystem-catalog-tool -- validate
+```
+
+These commands have distinct responsibilities:
+
+- `write`: source-aware; regenerates and writes `catalog/index.json` and
+  `catalog/index.md`.
+- `check`: source-aware; regenerates expected output and compares it with the
+  committed projection without mutation.
+- `validate`: source-independent; reads committed `catalog/index.json` and
+  verifies that it is an internally valid canonical Catalog v1 document.
+
 ## Consuming Catalog v1
 
 `index.json` is the machine-readable Catalog contract. Local query commands read
@@ -84,6 +99,30 @@ Each artifact entry contains discovery/navigation fields only:
 There is no Catalog-owned artifact ID in v1. Repository-relative path and Cargo
 package name already have concrete owners.
 
+Catalog v1 is a strict canonical document contract, not an open property bag.
+Readers reject unknown top-level fields, artifact fields, and dependency-group
+fields. Persisted vocabulary such as `maturity`, `status`, `tags`, `provides`,
+or `requires` cannot be added to a v1 document as optional ignored data.
+
+Artifact paths are canonical repository-relative slash-separated paths matching
+the supported topology exactly. The artifact `kind` and `category` must agree
+with the path:
+
+```text
+packages/<category>/<artifact>        -> kind package, category <category>
+hosts/<artifact>                      -> kind host, no category
+compositions/<category>/<artifact>    -> kind composition, category <category>
+examples/<artifact>                   -> kind example, no category
+```
+
+Paths must not be absolute, contain empty, `.` or `..` segments, use
+backslashes, or use unsupported topology depth. When `readme` is present, it is
+exactly `<artifact path>/README.md`.
+
+Artifacts are sorted lexicographically by `path`. Dependency path arrays are
+sorted lexicographically inside each dependency group. Readers reject malformed
+or non-canonical order rather than silently normalizing it.
+
 ## Classification
 
 Catalog v1 classifies workspace Cargo packages by repository path:
@@ -100,6 +139,29 @@ cataloged ecosystem artifacts.
 
 Repository artifact kind and category are navigation facts. They are not Fabric
 semantic kinds.
+
+## Schema Evolution
+
+`schemaVersion: 1` means the document satisfies the complete v1 structural
+contract. Hardening reader enforcement of invariants already emitted by the
+generator does not require a schema-version bump.
+
+Data changes that do not change the persisted shape or field meaning do not
+require a new schema version. Examples include adding or removing artifacts,
+changing descriptions or versions, changing publishability, introducing a new
+category value, adding or removing Cargo dependency edges, or a README appearing
+or disappearing.
+
+Changes that alter persisted shape or meaning require a new schema version.
+That includes adding even an optional persisted field, removing or renaming a
+field, changing a field type or semantic meaning, changing dependency-group
+structure, adding or removing a persisted artifact kind, changing the
+path/category structural contract, adding an extension/custom-field mechanism,
+or changing identity/reference semantics.
+
+New query features that derive results from existing v1 fields do not require
+schema evolution. Generator refactoring or performance work also does not
+require schema evolution when generated v1 bytes and meaning remain unchanged.
 
 ## Dependency Meaning
 

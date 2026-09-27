@@ -4,6 +4,7 @@ use std::path::Path;
 use crate::error::CatalogError;
 use crate::model::{CatalogIndex, SCHEMA_VERSION};
 use crate::query::Catalog;
+use crate::validation;
 
 const JSON_PATH: &str = "catalog/index.json";
 
@@ -22,6 +23,7 @@ pub(crate) fn read_catalog_str(content: &str) -> Result<Catalog, CatalogError> {
             index.schema_version
         )));
     }
+    validation::validate_catalog_index(&index)?;
     Catalog::new(index)
 }
 
@@ -36,20 +38,6 @@ mod tests {
     {
       "kind": "package",
       "category": "networking",
-      "path": "packages/networking/tcp",
-      "cargoPackage": "onoal-fabric-package-networking-tcp",
-      "version": "0.1.0",
-      "description": "TCP",
-      "publishable": true,
-      "dependencies": {
-        "normal": [],
-        "development": [],
-        "build": []
-      }
-    },
-    {
-      "kind": "package",
-      "category": "networking",
       "path": "packages/networking/http",
       "cargoPackage": "onoal-fabric-package-networking-http",
       "version": "0.1.0",
@@ -59,6 +47,20 @@ mod tests {
         "normal": [
           "packages/networking/tcp"
         ],
+        "development": [],
+        "build": []
+      }
+    },
+    {
+      "kind": "package",
+      "category": "networking",
+      "path": "packages/networking/tcp",
+      "cargoPackage": "onoal-fabric-package-networking-tcp",
+      "version": "0.1.0",
+      "description": "TCP",
+      "publishable": true,
+      "dependencies": {
+        "normal": [],
         "development": [],
         "build": []
       }
@@ -88,5 +90,39 @@ mod tests {
             .unwrap_err()
             .to_string()
             .contains("invalid JSON"));
+    }
+
+    #[test]
+    fn unknown_top_level_fields_reject() {
+        let document = valid_catalog().replace(
+            "\"schemaVersion\": 1,",
+            "\"schemaVersion\": 1,\n  \"maturity\": \"stable\",",
+        );
+        assert!(read_catalog_str(&document)
+            .unwrap_err()
+            .to_string()
+            .contains("unknown field `maturity`"));
+    }
+
+    #[test]
+    fn unknown_artifact_fields_reject() {
+        let document = valid_catalog().replace(
+            "\"kind\": \"package\",",
+            "\"kind\": \"package\",\n      \"provides\": [\"TcpByteStreamTransport\"],",
+        );
+        assert!(read_catalog_str(&document)
+            .unwrap_err()
+            .to_string()
+            .contains("unknown field `provides`"));
+    }
+
+    #[test]
+    fn unknown_dependency_fields_reject() {
+        let document =
+            valid_catalog().replace("\"build\": []", "\"build\": [],\n        \"requires\": []");
+        assert!(read_catalog_str(&document)
+            .unwrap_err()
+            .to_string()
+            .contains("unknown field `requires`"));
     }
 }

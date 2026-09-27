@@ -6,6 +6,7 @@ mod presentation;
 mod query;
 mod reader;
 mod render;
+mod validation;
 mod workspace;
 
 use std::env;
@@ -41,6 +42,11 @@ fn run(command: Command) -> Result<(), CatalogError> {
             let workspace = workspace::Workspace::discover()?;
             let rendered = render_workspace_catalog(&workspace)?;
             output::check_catalog(&workspace.root, &rendered)
+        }
+        Command::Validate => {
+            let catalog = reader::read_catalog_from(Path::new("."))?;
+            println!("Catalog v1 valid: {} artifacts", catalog.artifacts().len());
+            Ok(())
         }
         Command::List => {
             let catalog = reader::read_catalog_from(Path::new("."))?;
@@ -101,6 +107,7 @@ fn render_workspace_catalog(
 enum Command {
     Write,
     Check,
+    Validate,
     List,
     ListKind(model::ArtifactKind),
     ListCategory(String),
@@ -120,6 +127,7 @@ impl Command {
         match input.as_deref() {
             Some("write") => expect_no_args(args, Self::Write),
             Some("check") => expect_no_args(args, Self::Check),
+            Some("validate") => expect_no_args(args, Self::Validate),
             Some("list") => expect_no_args(args, Self::List),
             Some("list-kind") => {
                 let value = required_argument(args, "list-kind", "kind")?;
@@ -146,10 +154,10 @@ impl Command {
                 Ok(Self::Dependents(value.to_owned()))
             }
             Some(other) => Err(CatalogError::new(format!(
-                "unknown command `{other}`: expected `write`, `check`, `list`, `list-kind`, `list-category`, `show`, `show-package`, `deps`, or `dependents`"
+                "unknown command `{other}`: expected `write`, `check`, `validate`, `list`, `list-kind`, `list-category`, `show`, `show-package`, `deps`, or `dependents`"
             ))),
             None => Err(CatalogError::new(
-                "missing command: expected `write`, `check`, `list`, `list-kind`, `list-category`, `show`, `show-package`, `deps`, or `dependents`".to_owned(),
+                "missing command: expected `write`, `check`, `validate`, `list`, `list-kind`, `list-category`, `show`, `show-package`, `deps`, or `dependents`".to_owned(),
             )),
         }
     }
@@ -195,6 +203,11 @@ mod tests {
         assert_eq!(
             Command::parse_args(Some("check".to_owned()), &["check".to_owned()]).expect("check"),
             Command::Check
+        );
+        assert_eq!(
+            Command::parse_args(Some("validate".to_owned()), &["validate".to_owned()])
+                .expect("validate"),
+            Command::Validate
         );
         assert_eq!(
             Command::parse_args(Some("list".to_owned()), &["list".to_owned()]).expect("list"),
