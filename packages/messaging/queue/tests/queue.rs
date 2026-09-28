@@ -21,7 +21,7 @@ fabric::component! {
 
         runtime {
             fn produce(&self, payload: Vec<u8>) -> QueueSendResult {
-                self.relations().outbox.send(payload)
+                resolve_resource(self.relations().outbox.send(payload))
             }
         }
     }
@@ -44,7 +44,7 @@ fabric::component! {
 
         runtime {
             fn process_one(&self) -> Option<Vec<u8>> {
-                self.relations().inbox.try_receive().map(|message| {
+                resolve_resource(self.relations().inbox.try_receive()).map(|message| {
                     message
                         .payload
                         .into_iter()
@@ -54,7 +54,7 @@ fabric::component! {
             }
 
             fn observed_depth(&self) -> usize {
-                self.relations().inbox.depth()
+                resolve_resource(self.relations().inbox.depth())
             }
         }
     }
@@ -76,7 +76,7 @@ fabric::component! {
 
         runtime {
             fn consume(&self) -> Option<QueueMessage> {
-                self.relations().inbox.try_receive()
+                resolve_resource(self.relations().inbox.try_receive())
             }
         }
     }
@@ -98,7 +98,7 @@ fabric::component! {
 
         runtime {
             fn consume(&self) -> Option<QueueMessage> {
-                self.relations().inbox.try_receive()
+                resolve_resource(self.relations().inbox.try_receive())
             }
         }
     }
@@ -123,15 +123,15 @@ fabric::component! {
         runtime {
             fn send_to_both(&self) -> (QueueSendResult, QueueSendResult) {
                 (
-                    self.relations().events.send(b"event".to_vec()),
-                    self.relations().jobs.send(b"job".to_vec()),
+                    resolve_resource(self.relations().events.send(b"event".to_vec())),
+                    resolve_resource(self.relations().jobs.send(b"job".to_vec())),
                 )
             }
 
             fn receive_from_both(&self) -> (Option<QueueMessage>, Option<QueueMessage>) {
                 (
-                    self.relations().events.try_receive(),
-                    self.relations().jobs.try_receive(),
+                    resolve_resource(self.relations().events.try_receive()),
+                    resolve_resource(self.relations().jobs.try_receive()),
                 )
             }
         }
@@ -148,6 +148,15 @@ fn bind_producer(queue_name: &'static str) -> impl IntoFabricContribution {
         &queue,
     );
     FabricContribution::new().component(component)
+}
+
+fn resolve_resource<T>(mut future: fabric::resource::ResourceFuture<'_, T>) -> T {
+    let waker = std::task::Waker::noop();
+    let mut context = std::task::Context::from_waker(waker);
+    match future.as_mut().poll(&mut context) {
+        std::task::Poll::Ready(value) => value,
+        std::task::Poll::Pending => panic!("queue test resource operation unexpectedly yielded"),
+    }
 }
 
 fn bind_worker(queue_name: &'static str) -> impl IntoFabricContribution {

@@ -54,34 +54,31 @@ fabric::component! {
 
         runtime {
             fn run_jobs(&self) -> Result<InstrumentedJobResult, InstrumentedJobError> {
-                let first_send = self.relations().jobs.send(b"job".to_vec());
+                let first_send = resolve_resource(self.relations().jobs.send(b"job".to_vec()));
                 match first_send {
                     QueueSendResult::Accepted => {
                         let _: CounterIncrementResult =
-                            self.relations().successful_jobs.increment(1)?;
+                            resolve_resource(self.relations().successful_jobs.increment(1))?;
                     }
                     QueueSendResult::Full { .. } => {
                         let _: CounterIncrementResult =
-                            self.relations().failed_jobs.increment(1)?;
+                            resolve_resource(self.relations().failed_jobs.increment(1))?;
                     }
                 }
 
-                let second_send = self.relations().jobs.send(b"overflow".to_vec());
+                let second_send = resolve_resource(self.relations().jobs.send(b"overflow".to_vec()));
                 match second_send {
                     QueueSendResult::Accepted => {
                         let _: CounterIncrementResult =
-                            self.relations().successful_jobs.increment(1)?;
+                            resolve_resource(self.relations().successful_jobs.increment(1))?;
                     }
                     QueueSendResult::Full { .. } => {
                         let _: CounterIncrementResult =
-                            self.relations().failed_jobs.increment(1)?;
+                            resolve_resource(self.relations().failed_jobs.increment(1))?;
                     }
                 }
 
-                let processed = self.relations()
-                    .jobs
-                    .try_receive()
-                    .map(|message| {
+                let processed = resolve_resource(self.relations().jobs.try_receive()).map(|message| {
                         let mut output = b"third-party:".to_vec();
                         output.extend(message.payload);
                         output
@@ -91,9 +88,9 @@ fabric::component! {
                     "third-party-jobs",
                     "processed public queue job",
                 );
-                self.relations().log.emit(logged.clone())?;
-                let successes = self.relations().successful_jobs.current()?;
-                let failures = self.relations().failed_jobs.current()?;
+                resolve_resource(self.relations().log.emit(logged.clone()))?;
+                let successes = resolve_resource(self.relations().successful_jobs.current())?;
+                let failures = resolve_resource(self.relations().failed_jobs.current())?;
                 Ok(InstrumentedJobResult {
                     first_send,
                     second_send,
@@ -147,6 +144,17 @@ fn instrumented_queue_consumer(
             &log,
         );
     FabricContribution::new().component(component)
+}
+
+fn resolve_resource<T>(mut future: fabric::resource::ResourceFuture<'_, T>) -> T {
+    let waker = std::task::Waker::noop();
+    let mut context = std::task::Context::from_waker(waker);
+    match future.as_mut().poll(&mut context) {
+        std::task::Poll::Ready(value) => value,
+        std::task::Poll::Pending => {
+            panic!("third-party messaging resource operation unexpectedly yielded")
+        }
+    }
 }
 
 #[test]

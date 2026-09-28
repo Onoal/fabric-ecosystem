@@ -27,13 +27,13 @@ fabric::component! {
 
         runtime {
             fn send_observed(&self, payload: Vec<u8>) -> Result<QueueSendResult, CounterError> {
-                let result = self.relations().queue.send(payload);
+                let result = resolve_resource(self.relations().queue.send(payload));
                 match result {
                     QueueSendResult::Accepted => {
-                        let _ = self.relations().successes.increment(1)?;
+                        let _ = resolve_resource(self.relations().successes.increment(1))?;
                     }
                     QueueSendResult::Full { .. } => {
-                        let _ = self.relations().failures.increment(1)?;
+                        let _ = resolve_resource(self.relations().failures.increment(1))?;
                     }
                 }
                 Ok(result)
@@ -41,8 +41,8 @@ fabric::component! {
 
             fn observed_counts(&self) -> Result<ObservedQueueCounts, CounterError> {
                 Ok(ObservedQueueCounts {
-                    successes: self.relations().successes.current()?,
-                    failures: self.relations().failures.current()?,
+                    successes: resolve_resource(self.relations().successes.current())?,
+                    failures: resolve_resource(self.relations().failures.current())?,
                 })
             }
         }
@@ -76,4 +76,15 @@ pub(crate) fn observed_queue_producer() -> impl IntoFabricContribution {
             &failures,
         );
     FabricContribution::new().component(component)
+}
+
+fn resolve_resource<T>(mut future: fabric::resource::ResourceFuture<'_, T>) -> T {
+    let waker = std::task::Waker::noop();
+    let mut context = std::task::Context::from_waker(waker);
+    match future.as_mut().poll(&mut context) {
+        std::task::Poll::Ready(value) => value,
+        std::task::Poll::Pending => {
+            panic!("local observed queue resource operation unexpectedly yielded")
+        }
+    }
 }

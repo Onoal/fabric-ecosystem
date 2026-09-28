@@ -13,7 +13,5 @@ path = "src/lib.rs"
 [dependencies]
 fabric.workspace = true
 fabric-package-networking-tcp.workspace = true
-httparse.workspace = true
-
-[dev-dependencies]
 futures.workspace = true
+httparse.workspace = true

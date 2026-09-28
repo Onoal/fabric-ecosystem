@@ -48,13 +48,13 @@ fabric::adapter! {
         }
 
         runtime {
-            fn public_key(&self) -> Result<Ed25519PublicKey, Ed25519SigningError> {
+            async fn public_key(&self) -> Result<Ed25519PublicKey, Ed25519SigningError> {
                 self.state
                     .get()
                     .with_signing_key(|signing_key| Ed25519PublicKey::from(signing_key.verifying_key()))
             }
 
-            fn sign(&self, message: Vec<u8>) -> Result<Ed25519Signature, Ed25519SigningError> {
+            async fn sign(&self, message: Vec<u8>) -> Result<Ed25519Signature, Ed25519SigningError> {
                 self.state.get().with_signing_key(|signing_key| {
                     let signature: DalekSignature = signing_key.sign(&message);
                     Ed25519Signature::from_bytes(signature.to_bytes())

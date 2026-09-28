@@ -12,6 +12,4 @@ path = "src/lib.rs"
 
 [dependencies]
 fabric.workspace = true
-
-[dev-dependencies]
 futures.workspace = true

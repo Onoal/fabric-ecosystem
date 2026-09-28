@@ -34,13 +34,13 @@ fabric::component! {
 
         runtime {
             fn exercise(&self, key: String, first: Vec<u8>, second: Vec<u8>) -> Result<StoreExercise, KeyValueError> {
-                self.relations().store.set(key.clone(), first)?;
-                let first_read = self.relations().store.get(key.clone())?;
-                self.relations().store.set(key.clone(), second)?;
-                let replaced = self.relations().store.get(key.clone())?;
-                let deleted = self.relations().store.delete(key.clone())?;
-                let after_delete = self.relations().store.get(key.clone())?;
-                let missing_delete = self.relations().store.delete(key)?;
+                resolve_resource(self.relations().store.set(key.clone(), first))?;
+                let first_read = resolve_resource(self.relations().store.get(key.clone()))?;
+                resolve_resource(self.relations().store.set(key.clone(), second))?;
+                let replaced = resolve_resource(self.relations().store.get(key.clone()))?;
+                let deleted = resolve_resource(self.relations().store.delete(key.clone()))?;
+                let after_delete = resolve_resource(self.relations().store.get(key.clone()))?;
+                let missing_delete = resolve_resource(self.relations().store.delete(key))?;
                 Ok(StoreExercise {
                     first_read,
                     replaced,
@@ -51,7 +51,7 @@ fabric::component! {
             }
 
             fn read(&self, key: String) -> Result<Option<Vec<u8>>, KeyValueError> {
-                self.relations().store.get(key)
+                resolve_resource(self.relations().store.get(key))
             }
         }
     }
@@ -74,15 +74,17 @@ fabric::component! {
 
         runtime {
             fn write_both(&self) -> Result<DualStoreExercise, KeyValueError> {
-                self.relations()
-                    .primary
-                    .set("shared".to_owned(), b"primary".to_vec())?;
-                self.relations()
-                    .cache
-                    .set("shared".to_owned(), b"cache".to_vec())?;
+                resolve_resource(self.relations()
+                        .primary
+                        .set("shared".to_owned(), b"primary".to_vec()),
+                )?;
+                resolve_resource(self.relations()
+                        .cache
+                        .set("shared".to_owned(), b"cache".to_vec()),
+                )?;
                 Ok(DualStoreExercise {
-                    primary: self.relations().primary.get("shared".to_owned())?,
-                    cache: self.relations().cache.get("shared".to_owned())?,
+                    primary: resolve_resource(self.relations().primary.get("shared".to_owned()))?,
+                    cache: resolve_resource(self.relations().cache.get("shared".to_owned()))?,
                 })
             }
         }
@@ -123,6 +125,17 @@ fn bind_dual_store_user(
             &cache,
         );
     FabricContribution::new().component(component)
+}
+
+fn resolve_resource<T>(mut future: fabric::resource::ResourceFuture<'_, T>) -> T {
+    let waker = std::task::Waker::noop();
+    let mut context = std::task::Context::from_waker(waker);
+    match future.as_mut().poll(&mut context) {
+        std::task::Poll::Ready(value) => value,
+        std::task::Poll::Pending => {
+            panic!("KeyValue test resource operation unexpectedly yielded")
+        }
+    }
 }
 
 #[test]

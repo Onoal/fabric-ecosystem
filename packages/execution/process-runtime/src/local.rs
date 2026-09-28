@@ -31,7 +31,7 @@ fabric::adapter! {
         }
 
         runtime {
-            fn execute(
+            async fn execute(
                 &self,
                 invocation: ProcessInvocation,
             ) -> Result<ProcessOutput, ProcessExecutionError> {

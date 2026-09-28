@@ -5,13 +5,13 @@ fabric::resource! {
         id: "onoal.package.data.relational-database";
 
         api {
-            fn execute(
+            async fn execute(
                 &self,
                 statement: String,
                 parameters: Vec<RelationalValue>,
             ) -> Result<usize, RelationalDatabaseError>;
 
-            fn query(
+            async fn query(
                 &self,
                 statement: String,
                 parameters: Vec<RelationalValue>,

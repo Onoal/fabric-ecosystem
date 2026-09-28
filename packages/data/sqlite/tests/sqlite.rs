@@ -49,7 +49,7 @@ fabric::component! {
                 statement: String,
                 parameters: Vec<RelationalValue>,
             ) -> Result<usize, RelationalDatabaseError> {
-                self.relations().database.execute(statement, parameters)
+                resolve_resource(self.relations().database.execute(statement, parameters))
             }
 
             fn query(
@@ -57,25 +57,25 @@ fabric::component! {
                 statement: String,
                 parameters: Vec<RelationalValue>,
             ) -> Result<RelationalQueryResult, RelationalDatabaseError> {
-                self.relations().database.query(statement, parameters)
+                resolve_resource(self.relations().database.query(statement, parameters))
             }
 
             fn create_insert_query(&self) -> Result<DatabaseExercise, RelationalDatabaseError> {
-                self.relations().database.execute(
+                resolve_resource(self.relations().database.execute(
                     "CREATE TABLE IF NOT EXISTS component_items (id INTEGER PRIMARY KEY, name TEXT NOT NULL)".to_owned(),
                     vec![],
-                )?;
-                let inserted = self.relations().database.execute(
+                ))?;
+                let inserted = resolve_resource(self.relations().database.execute(
                     "INSERT INTO component_items (id, name) VALUES (?1, ?2)".to_owned(),
                     vec![
                         RelationalValue::Integer(1),
                         RelationalValue::Text("component".to_owned()),
                     ],
-                )?;
-                let rows = self.relations().database.query(
+                ))?;
+                let rows = resolve_resource(self.relations().database.query(
                     "SELECT id, name FROM component_items ORDER BY id".to_owned(),
                     vec![],
-                )?;
+                ))?;
                 Ok(DatabaseExercise { inserted, rows })
             }
         }
@@ -99,29 +99,31 @@ fabric::component! {
 
         runtime {
             fn write_and_read_both(&self) -> Result<(RelationalQueryResult, RelationalQueryResult), RelationalDatabaseError> {
-                self.relations().primary.execute(
+                resolve_resource(self.relations().primary.execute(
                     "CREATE TABLE marker (value TEXT NOT NULL)".to_owned(),
                     vec![],
-                )?;
-                self.relations().secondary.execute(
+                ))?;
+                resolve_resource(self.relations().secondary.execute(
                     "CREATE TABLE marker (value TEXT NOT NULL)".to_owned(),
                     vec![],
-                )?;
-                self.relations().primary.execute(
+                ))?;
+                resolve_resource(self.relations().primary.execute(
                     "INSERT INTO marker (value) VALUES (?1)".to_owned(),
                     vec![RelationalValue::Text("primary".to_owned())],
-                )?;
-                self.relations().secondary.execute(
+                ))?;
+                resolve_resource(self.relations().secondary.execute(
                     "INSERT INTO marker (value) VALUES (?1)".to_owned(),
                     vec![RelationalValue::Text("secondary".to_owned())],
-                )?;
+                ))?;
                 Ok((
-                    self.relations()
-                        .primary
-                        .query("SELECT value FROM marker".to_owned(), vec![])?,
-                    self.relations()
-                        .secondary
-                        .query("SELECT value FROM marker".to_owned(), vec![])?,
+                    resolve_resource(self.relations()
+                            .primary
+                            .query("SELECT value FROM marker".to_owned(), vec![]),
+                    )?,
+                    resolve_resource(self.relations()
+                            .secondary
+                            .query("SELECT value FROM marker".to_owned(), vec![]),
+                    )?,
                 ))
             }
         }
@@ -137,6 +139,17 @@ fn unique_path(label: &str) -> PathBuf {
         "onoal-fabric-sqlite-{label}-{}-{nanos}.db",
         std::process::id()
     ))
+}
+
+fn resolve_resource<T>(mut future: fabric::resource::ResourceFuture<'_, T>) -> T {
+    let waker = std::task::Waker::noop();
+    let mut context = std::task::Context::from_waker(waker);
+    match future.as_mut().poll(&mut context) {
+        std::task::Poll::Ready(value) => value,
+        std::task::Poll::Pending => {
+            panic!("sqlite test resource operation unexpectedly yielded")
+        }
+    }
 }
 
 fn probe_for(name: &'static str) -> impl IntoFabricContribution {

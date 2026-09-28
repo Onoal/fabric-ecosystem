@@ -13,7 +13,7 @@ fabric::resource! {
         id: "onoal.host.linux.test.materialization-resource";
 
         api {
-            fn value(&self) -> String;
+            async fn value(&self) -> String;
         }
     }
 }
@@ -26,7 +26,7 @@ fabric::adapter! {
         host: linux_requirement();
 
         runtime {
-            fn value(&self) -> String {
+            async fn value(&self) -> String {
                 "linux-host".to_owned()
             }
         }

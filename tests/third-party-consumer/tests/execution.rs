@@ -24,7 +24,7 @@ fabric::component! {
 
         runtime {
             fn run_process(&self) -> Result<ProcessOutput, ProcessExecutionError> {
-                self.relations().runtime.execute(
+                resolve_resource(self.relations().runtime.execute(
                     ProcessInvocation::new("sh")
                         .with_args([
                             "-c",
@@ -36,7 +36,7 @@ fabric::component! {
                             "ONOAL_THIRD_PARTY_PROCESS",
                             "process",
                         )]),
-                )
+                ))
             }
         }
     }
@@ -52,6 +52,17 @@ fn process_consumer(runtime_name: &'static str) -> impl IntoFabricContribution {
         &runtime,
     );
     FabricContribution::new().component(component)
+}
+
+fn resolve_resource<T>(mut future: fabric::resource::ResourceFuture<'_, T>) -> T {
+    let waker = std::task::Waker::noop();
+    let mut context = std::task::Context::from_waker(waker);
+    match future.as_mut().poll(&mut context) {
+        std::task::Poll::Ready(value) => value,
+        std::task::Poll::Pending => {
+            panic!("third-party process resource operation unexpectedly yielded")
+        }
+    }
 }
 
 #[cfg(unix)]

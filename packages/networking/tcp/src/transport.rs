@@ -23,11 +23,11 @@ fabric::resource! {
         id: "onoal.package.networking.tcp.byte-stream";
 
         api {
-            fn requested_bind_address(&self) -> TcpSocketAddress;
-            fn actual_bound_address(&self) -> Option<TcpSocketAddress>;
-            fn accepted_connections(&self) -> usize;
-            fn connect(&self, remote: TcpSocketAddress) -> TcpConnectResult;
-            fn accept(&self) -> TcpAcceptResult;
+            async fn requested_bind_address(&self) -> TcpSocketAddress;
+            async fn actual_bound_address(&self) -> Option<TcpSocketAddress>;
+            async fn accepted_connections(&self) -> usize;
+            async fn connect(&self, remote: TcpSocketAddress) -> TcpConnectResult;
+            async fn accept(&self) -> TcpAcceptResult;
         }
     }
 }

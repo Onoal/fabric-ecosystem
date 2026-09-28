@@ -24,10 +24,10 @@ fabric::component! {
 
         runtime {
             fn write_read_delete(&self, key: String, value: Vec<u8>) -> Result<QuickstartResult, KeyValueError> {
-                self.relations().store.set(key.clone(), value)?;
-                let stored = self.relations().store.get(key.clone())?;
-                let deleted = self.relations().store.delete(key.clone())?;
-                let after_delete = self.relations().store.get(key)?;
+                resolve_resource(self.relations().store.set(key.clone(), value))?;
+                let stored = resolve_resource(self.relations().store.get(key.clone()))?;
+                let deleted = resolve_resource(self.relations().store.delete(key.clone()))?;
+                let after_delete = resolve_resource(self.relations().store.get(key))?;
                 Ok(QuickstartResult {
                     stored,
                     deleted,
@@ -90,5 +90,16 @@ fn display_optional_bytes(value: Option<&[u8]>) -> String {
     match value {
         Some(bytes) => String::from_utf8_lossy(bytes).into_owned(),
         None => "missing".to_owned(),
+    }
+}
+
+fn resolve_resource<T>(mut future: fabric::resource::ResourceFuture<'_, T>) -> T {
+    let waker = std::task::Waker::noop();
+    let mut context = std::task::Context::from_waker(waker);
+    match future.as_mut().poll(&mut context) {
+        std::task::Poll::Ready(value) => value,
+        std::task::Poll::Pending => {
+            panic!("local KeyValue resource operation unexpectedly yielded")
+        }
     }
 }

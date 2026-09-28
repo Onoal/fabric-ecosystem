@@ -28,32 +28,32 @@ fabric::component! {
 
         runtime {
             fn write_read_log(&self, value: String) -> Result<TestBackendAppResult, String> {
-                self.relations().database.execute(
+                resolve_resource(self.relations().database.execute(
                     "CREATE TABLE IF NOT EXISTS local_backend_items (id INTEGER PRIMARY KEY, value TEXT NOT NULL)".to_owned(),
                     vec![],
-                ).map_err(|error| error.to_string())?;
-                self.relations().database.execute(
+                )).map_err(|error| error.to_string())?;
+                resolve_resource(self.relations().database.execute(
                     "INSERT INTO local_backend_items (id, value) VALUES (?1, ?2) ON CONFLICT(id) DO UPDATE SET value = excluded.value".to_owned(),
                     vec![RelationalValue::Integer(1), RelationalValue::Text(value)],
-                ).map_err(|error| error.to_string())?;
-                let value = query_value(self.relations().database.query(
+                )).map_err(|error| error.to_string())?;
+                let value = query_value(resolve_resource(self.relations().database.query(
                     "SELECT value FROM local_backend_items WHERE id = ?1".to_owned(),
                     vec![RelationalValue::Integer(1)],
-                ).map_err(|error| error.to_string())?);
+                )).map_err(|error| error.to_string())?);
                 let logged = LogRecord::targeted(
                     fabric_package_observability_logging::LogLevel::Info,
                     "local-backend-test",
                     "local backend app used database and log",
                 );
-                self.relations().log.emit(logged.clone()).map_err(|error| error.to_string())?;
+                resolve_resource(self.relations().log.emit(logged.clone())).map_err(|error| error.to_string())?;
                 Ok(TestBackendAppResult { value, logged })
             }
 
             fn read_value(&self) -> Result<Option<String>, String> {
-                let rows = self.relations().database.query(
+                let rows = resolve_resource(self.relations().database.query(
                     "SELECT value FROM local_backend_items WHERE id = ?1".to_owned(),
                     vec![RelationalValue::Integer(1)],
-                ).map_err(|error| error.to_string())?;
+                )).map_err(|error| error.to_string())?;
                 Ok(query_value(rows))
             }
         }
@@ -92,4 +92,15 @@ pub fn test_app(
             &log,
         );
     FabricContribution::new().component(component)
+}
+
+fn resolve_resource<T>(mut future: fabric::resource::ResourceFuture<'_, T>) -> T {
+    let waker = std::task::Waker::noop();
+    let mut context = std::task::Context::from_waker(waker);
+    match future.as_mut().poll(&mut context) {
+        std::task::Poll::Ready(value) => value,
+        std::task::Poll::Pending => {
+            panic!("local backend test resource operation unexpectedly yielded")
+        }
+    }
 }

@@ -31,8 +31,8 @@ fabric::component! {
 
         runtime {
             fn sign_payload(&self, payload: Vec<u8>) -> Result<SignedEnvelope, Ed25519SigningError> {
-                let public_key = self.relations().signer.public_key()?;
-                let signature = self.relations().signer.sign(payload.clone())?;
+                let public_key = resolve_resource(self.relations().signer.public_key())?;
+                let signature = resolve_resource(self.relations().signer.sign(payload.clone()))?;
                 Ok(SignedEnvelope { payload, public_key, signature })
             }
         }
@@ -49,6 +49,17 @@ fn signing_consumer(signer_name: &'static str) -> impl IntoFabricContribution {
         &signer,
     );
     FabricContribution::new().component(component)
+}
+
+fn resolve_resource<T>(mut future: fabric::resource::ResourceFuture<'_, T>) -> T {
+    let waker = std::task::Waker::noop();
+    let mut context = std::task::Context::from_waker(waker);
+    match future.as_mut().poll(&mut context) {
+        std::task::Poll::Ready(value) => value,
+        std::task::Poll::Pending => {
+            panic!("third-party Ed25519 resource operation unexpectedly yielded")
+        }
+    }
 }
 
 #[test]

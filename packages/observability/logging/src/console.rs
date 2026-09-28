@@ -83,7 +83,7 @@ fabric::adapter! {
         }
 
         runtime {
-            fn emit(&self, record: LogRecord) -> Result<(), LogError> {
+            async fn emit(&self, record: LogRecord) -> Result<(), LogError> {
                 let mut stdout = io::stdout().lock();
                 let mut stderr = io::stderr().lock();
                 write_console_record(&self.config.config, &record, &mut stdout, &mut stderr)

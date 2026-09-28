@@ -35,7 +35,7 @@ fabric::component! {
 
         runtime {
             fn accept_once(&self) -> Result<Option<Vec<u8>>, TcpTransportError> {
-                match self.relations().transport.accept() {
+                match resolve_resource(self.relations().transport.accept()) {
                     TcpAcceptResult::Accepted(connection) => connection.read_to_end().map(Some),
                     TcpAcceptResult::Stopped => Ok(None),
                     TcpAcceptResult::Failed(error) => Err(error),
@@ -43,7 +43,7 @@ fabric::component! {
             }
 
             fn connect_once(&self, remote: TcpSocketAddress) -> Result<(), TcpTransportError> {
-                match self.relations().transport.connect(remote) {
+                match resolve_resource(self.relations().transport.connect(remote)) {
                     TcpConnectResult::Connected(connection) => connection.shutdown_both(),
                     TcpConnectResult::Failed(error) => Err(error),
                 }
@@ -62,6 +62,17 @@ fn tcp_consumer(transport_name: &'static str) -> impl IntoFabricContribution {
         &transport,
     );
     FabricContribution::new().component(component)
+}
+
+fn resolve_resource<T>(mut future: fabric::resource::ResourceFuture<'_, T>) -> T {
+    let waker = std::task::Waker::noop();
+    let mut context = std::task::Context::from_waker(waker);
+    match future.as_mut().poll(&mut context) {
+        std::task::Poll::Ready(value) => value,
+        std::task::Poll::Pending => {
+            panic!("third-party TCP resource operation unexpectedly yielded")
+        }
+    }
 }
 
 #[test]

@@ -65,10 +65,10 @@ After the owning generation stops, stale connection operations fail with
 
 ## Accept Semantics
 
-`accept()` waits for the next queued accepted connection while the realization
-is live. Stopping the Instance unblocks waiting accept calls and returns
-`Stopped`. Timeout and nonblocking accept are deliberate future extensions, not
-part of this first v1 TCP foundation.
+`accept().await` waits for the next queued accepted connection while the
+realization is live. Stopping the Instance unblocks waiting accept calls and
+returns `Stopped`. Timeout and nonblocking accept are deliberate future
+extensions, not part of this first v1 TCP foundation.
 
 ## Runtime Address Discovery
 

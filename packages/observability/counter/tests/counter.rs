@@ -22,21 +22,21 @@ fabric::component! {
 
         runtime {
             fn current(&self) -> Result<u64, CounterError> {
-                self.relations().counter.current()
+                resolve_resource(self.relations().counter.current())
             }
 
             fn increment_by(&self, amount: u64) -> Result<CounterIncrementResult, CounterError> {
-                self.relations().counter.increment(amount)
+                resolve_resource(self.relations().counter.increment(amount))
             }
 
             fn increment_many(&self, times: u64, amount: u64) -> Result<u64, CounterError> {
                 for _ in 0..times {
-                    match self.relations().counter.increment(amount)? {
+                    match resolve_resource(self.relations().counter.increment(amount))? {
                         CounterIncrementResult::Updated { .. } => {}
                         CounterIncrementResult::Overflow { .. } => break,
                     }
                 }
-                self.relations().counter.current()
+                resolve_resource(self.relations().counter.current())
             }
         }
     }
@@ -67,17 +67,17 @@ fabric::component! {
 
         runtime {
             fn record_success(&self) -> Result<CounterIncrementResult, CounterError> {
-                self.relations().successes.increment(1)
+                resolve_resource(self.relations().successes.increment(1))
             }
 
             fn record_failure(&self) -> Result<CounterIncrementResult, CounterError> {
-                self.relations().failures.increment(1)
+                resolve_resource(self.relations().failures.increment(1))
             }
 
             fn snapshot(&self) -> Result<TestCounterSnapshot, CounterError> {
                 Ok(TestCounterSnapshot {
-                    successes: self.relations().successes.current()?,
-                    failures: self.relations().failures.current()?,
+                    successes: resolve_resource(self.relations().successes.current())?,
+                    failures: resolve_resource(self.relations().failures.current())?,
                 })
             }
         }
@@ -105,7 +105,7 @@ fabric::component! {
                     for _ in 0..workers {
                         handles.push(scope.spawn(|| {
                             for _ in 0..per_worker {
-                                match self.relations().counter.increment(1)? {
+                                match resolve_resource(self.relations().counter.increment(1))? {
                                     CounterIncrementResult::Updated { .. } => {}
                                     CounterIncrementResult::Overflow { .. } => {
                                         return Err(CounterError::increment_failed(
@@ -122,7 +122,7 @@ fabric::component! {
                             .join()
                             .map_err(|_| CounterError::increment_failed("worker thread panicked"))??;
                     }
-                    self.relations().counter.current()
+                    resolve_resource(self.relations().counter.current())
                 })
             }
         }
@@ -143,6 +143,17 @@ fn activate<C: fabric::authoring::ComponentDefinition>(
     let component = instance.component::<C>().expect("component");
     component.reconcile().expect("reconcile");
     component
+}
+
+fn resolve_resource<T>(mut future: fabric::resource::ResourceFuture<'_, T>) -> T {
+    let waker = std::task::Waker::noop();
+    let mut context = std::task::Context::from_waker(waker);
+    match future.as_mut().poll(&mut context) {
+        std::task::Poll::Ready(value) => value,
+        std::task::Poll::Pending => {
+            panic!("counter test resource operation unexpectedly yielded")
+        }
+    }
 }
 
 fn counter_user(counter_name: &'static str) -> impl IntoFabricContribution {

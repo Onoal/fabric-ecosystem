@@ -41,11 +41,11 @@ fabric::adapter! {
         }
 
         runtime {
-            fn current(&self) -> Result<u64, CounterError> {
+            async fn current(&self) -> Result<u64, CounterError> {
                 self.state.get().current()
             }
 
-            fn increment(&self, amount: u64) -> Result<CounterIncrementResult, CounterError> {
+            async fn increment(&self, amount: u64) -> Result<CounterIncrementResult, CounterError> {
                 self.state.get().increment(amount)
             }
         }

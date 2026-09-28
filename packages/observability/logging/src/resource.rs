@@ -5,7 +5,7 @@ fabric::resource! {
         id: "onoal.package.observability.logging.sink";
 
         api {
-            fn emit(&self, record: LogRecord) -> Result<(), LogError>;
+            async fn emit(&self, record: LogRecord) -> Result<(), LogError>;
         }
     }
 }

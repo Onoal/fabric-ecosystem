@@ -25,11 +25,11 @@ fabric::adapter! {
         }
 
         runtime {
-            fn requested_bind_address(&self) -> TcpSocketAddress {
+            async fn requested_bind_address(&self) -> TcpSocketAddress {
                 self.config.requested_bind.clone()
             }
 
-            fn actual_bound_address(&self) -> Option<TcpSocketAddress> {
+            async fn actual_bound_address(&self) -> Option<TcpSocketAddress> {
                 self.state
                     .get()
                     .actual_address
@@ -38,21 +38,21 @@ fabric::adapter! {
                     .clone()
             }
 
-            fn accepted_connections(&self) -> usize {
+            async fn accepted_connections(&self) -> usize {
                 self.state
                     .get()
                     .accepted_connections
                     .load(Ordering::SeqCst)
             }
 
-            fn connect(&self, remote: TcpSocketAddress) -> TcpConnectResult {
+            async fn connect(&self, remote: TcpSocketAddress) -> TcpConnectResult {
                 if !self.state.get().generation_live.load(Ordering::SeqCst) {
                     return TcpConnectResult::Failed(TcpTransportError::not_started());
                 }
                 connect_tcp(remote, Arc::clone(&self.state.get().generation_live))
             }
 
-            fn accept(&self) -> TcpAcceptResult {
+            async fn accept(&self) -> TcpAcceptResult {
                 if !self.state.get().generation_live.load(Ordering::SeqCst) {
                     return TcpAcceptResult::Stopped;
                 }
@@ -147,7 +147,13 @@ fabric::adapter! {
             stop {
                 self.state.get().stop_requested.store(true, Ordering::SeqCst);
                 self.state.get().generation_live.store(false, Ordering::SeqCst);
-                let address = self.actual_bound_address();
+                let address = self
+                    .state
+                    .get()
+                    .actual_address
+                    .lock()
+                    .expect("tcp listener address")
+                    .clone();
                 if let Some(address) = &address {
                     if let Ok(socket) = address.parse() {
                         let _ = TcpStream::connect(socket);

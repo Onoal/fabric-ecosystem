@@ -17,7 +17,7 @@ fabric::adapter! {
         }
 
         runtime {
-            fn get(&self, key: String) -> Result<Option<Vec<u8>>, KeyValueError> {
+            async fn get(&self, key: String) -> Result<Option<Vec<u8>>, KeyValueError> {
                 self.state
                     .get()
                     .entries
@@ -26,7 +26,7 @@ fabric::adapter! {
                     .map(|entries| entries.get(&key).cloned())
             }
 
-            fn set(&self, key: String, value: Vec<u8>) -> Result<(), KeyValueError> {
+            async fn set(&self, key: String, value: Vec<u8>) -> Result<(), KeyValueError> {
                 self.state
                     .get()
                     .entries
@@ -37,7 +37,7 @@ fabric::adapter! {
                     })
             }
 
-            fn delete(&self, key: String) -> Result<Option<Vec<u8>>, KeyValueError> {
+            async fn delete(&self, key: String) -> Result<Option<Vec<u8>>, KeyValueError> {
                 self.state
                     .get()
                     .entries

@@ -19,7 +19,7 @@ fabric::component! {
 
         runtime {
             fn accept_exchange(&self) -> Result<HttpExchange, HttpError> {
-                let connection = match self.relations().transport.accept() {
+                let connection = match resolve_resource(self.relations().transport.accept()) {
                     TcpAcceptResult::Accepted(connection) => connection,
                     TcpAcceptResult::Stopped => {
                         return Err(HttpError::new(
@@ -36,6 +36,17 @@ fabric::component! {
                 )?;
                 Ok(HttpExchange::new(request, connection))
             }
+        }
+    }
+}
+
+fn resolve_resource<T>(mut future: fabric::resource::ResourceFuture<'_, T>) -> T {
+    let waker = std::task::Waker::noop();
+    let mut context = std::task::Context::from_waker(waker);
+    match future.as_mut().poll(&mut context) {
+        std::task::Poll::Ready(value) => value,
+        std::task::Poll::Pending => {
+            panic!("local HTTP server resource operation unexpectedly yielded")
         }
     }
 }

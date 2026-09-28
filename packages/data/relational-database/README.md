@@ -19,6 +19,10 @@ execute(statement, parameters) -> Result<changed row count, RelationalDatabaseEr
 query(statement, parameters)   -> Result<RelationalQueryResult, RelationalDatabaseError>
 ```
 
+Both operations are uniformly awaitable Fabric Resource operations. A local
+SQLite realization may complete immediately, while future event-loop-backed
+realizations can use the same semantic operation boundary.
+
 `execute` is for statements that do not return a row result set. `query` is for
 statements that return rows.
 

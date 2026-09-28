@@ -30,12 +30,12 @@ fabric::component! {
 
         runtime {
             fn public_key(&self) -> Result<Ed25519PublicKey, Ed25519SigningError> {
-                self.relations().signer.public_key()
+                resolve_resource(self.relations().signer.public_key())
             }
 
             fn sign_payload(&self, payload: Vec<u8>) -> Result<TestSignedPayload, Ed25519SigningError> {
-                let public_key = self.relations().signer.public_key()?;
-                let signature = self.relations().signer.sign(payload.clone())?;
+                let public_key = resolve_resource(self.relations().signer.public_key())?;
+                let signature = resolve_resource(self.relations().signer.sign(payload.clone()))?;
                 Ok(TestSignedPayload {
                     payload,
                     public_key,
@@ -69,10 +69,10 @@ fabric::component! {
 
         runtime {
             fn sign_with_both(&self, payload: Vec<u8>) -> Result<TestDualSignedPayloads, Ed25519SigningError> {
-                let release_public_key = self.relations().release.public_key()?;
-                let release_signature = self.relations().release.sign(payload.clone())?;
-                let audit_public_key = self.relations().audit.public_key()?;
-                let audit_signature = self.relations().audit.sign(payload.clone())?;
+                let release_public_key = resolve_resource(self.relations().release.public_key())?;
+                let release_signature = resolve_resource(self.relations().release.sign(payload.clone()))?;
+                let audit_public_key = resolve_resource(self.relations().audit.public_key())?;
+                let audit_signature = resolve_resource(self.relations().audit.sign(payload.clone()))?;
                 Ok(TestDualSignedPayloads {
                     release: TestSignedPayload {
                         payload: payload.clone(),
@@ -142,6 +142,17 @@ fn dual_signing_app(
         );
 
     FabricContribution::new().component(component)
+}
+
+fn resolve_resource<T>(mut future: fabric::resource::ResourceFuture<'_, T>) -> T {
+    let waker = std::task::Waker::noop();
+    let mut context = std::task::Context::from_waker(waker);
+    match future.as_mut().poll(&mut context) {
+        std::task::Poll::Ready(value) => value,
+        std::task::Poll::Pending => {
+            panic!("Ed25519 test resource operation unexpectedly yielded")
+        }
+    }
 }
 
 fn single_signer_composition(id: &str) -> Composition {

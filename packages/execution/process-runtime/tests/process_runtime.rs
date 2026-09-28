@@ -24,7 +24,7 @@ fabric::component! {
 
         runtime {
             fn execute(&self, invocation: ProcessInvocation) -> Result<ProcessOutput, ProcessExecutionError> {
-                self.relations().runtime.execute(invocation)
+                resolve_resource(self.relations().runtime.execute(invocation))
             }
         }
     }
@@ -48,8 +48,8 @@ fabric::component! {
         runtime {
             fn execute_both(&self, primary: ProcessInvocation, secondary: ProcessInvocation) -> Result<(ProcessOutput, ProcessOutput), ProcessExecutionError> {
                 Ok((
-                    self.relations().primary.execute(primary)?,
-                    self.relations().secondary.execute(secondary)?,
+                    resolve_resource(self.relations().primary.execute(primary))?,
+                    resolve_resource(self.relations().secondary.execute(secondary))?,
                 ))
             }
         }
@@ -90,6 +90,17 @@ fn bind_dual_process_app(
             &secondary,
         );
     FabricContribution::new().component(component)
+}
+
+fn resolve_resource<T>(mut future: fabric::resource::ResourceFuture<'_, T>) -> T {
+    let waker = std::task::Waker::noop();
+    let mut context = std::task::Context::from_waker(waker);
+    match future.as_mut().poll(&mut context) {
+        std::task::Poll::Ready(value) => value,
+        std::task::Poll::Pending => {
+            panic!("process runtime test resource operation unexpectedly yielded")
+        }
+    }
 }
 
 fn process_composition(id: &str) -> Composition {

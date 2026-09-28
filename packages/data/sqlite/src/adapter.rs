@@ -23,7 +23,7 @@ fabric::adapter! {
         }
 
         runtime {
-            fn execute(
+            async fn execute(
                 &self,
                 statement: String,
                 parameters: Vec<RelationalValue>,
@@ -39,7 +39,7 @@ fabric::adapter! {
                 )
             }
 
-            fn query(
+            async fn query(
                 &self,
                 statement: String,
                 parameters: Vec<RelationalValue>,

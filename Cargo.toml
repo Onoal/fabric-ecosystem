@@ -31,7 +31,7 @@ repository = "https://github.com/Onoal/fabric-ecosystem"
 version = "0.1.0"
 
 [workspace.dependencies]
-fabric = { package = "onoal-fabric", version = "1.0.0" }
+fabric = { package = "onoal-fabric", version = "1.0.0", git = "https://github.com/Onoal/fabric.git", rev = "0954852ffba9cef8df397e3c1712be3611358073" }
 fabric-composition-http-server = { package = "onoal-fabric-composition-http-server", version = "0.1.0", path = "compositions/web/http-server" }
 fabric-composition-local-backend = { package = "onoal-fabric-composition-local-backend", version = "0.1.0", path = "compositions/web/local-backend" }
 fabric-host-linux = { package = "onoal-fabric-host-linux", version = "0.1.0", path = "hosts/linux" }

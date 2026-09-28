@@ -5,7 +5,7 @@ fabric::resource! {
         id: "onoal.package.execution.process-runtime";
 
         api {
-            fn execute(
+            async fn execute(
                 &self,
                 invocation: ProcessInvocation,
             ) -> Result<ProcessOutput, ProcessExecutionError>;

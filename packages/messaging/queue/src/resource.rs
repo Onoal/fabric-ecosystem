@@ -5,9 +5,9 @@ fabric::resource! {
         id: "onoal.package.messaging.queue.fifo";
 
         api {
-            fn send(&self, payload: Vec<u8>) -> QueueSendResult;
-            fn try_receive(&self) -> Option<QueueMessage>;
-            fn depth(&self) -> usize;
+            async fn send(&self, payload: Vec<u8>) -> QueueSendResult;
+            async fn try_receive(&self) -> Option<QueueMessage>;
+            async fn depth(&self) -> usize;
         }
     }
 }

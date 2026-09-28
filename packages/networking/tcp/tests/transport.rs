@@ -26,7 +26,7 @@ fabric::component! {
 
         runtime {
             fn connect(&self, remote: TcpSocketAddress) -> TcpConnectResult {
-                self.relations().transport.connect(remote)
+                resolve_resource(self.relations().transport.connect(remote))
             }
         }
     }
@@ -48,7 +48,7 @@ fabric::component! {
 
         runtime {
             fn serve_one_echo(&self) -> Result<usize, TcpTransportError> {
-                let connection = match self.relations().transport.accept() {
+                let connection = match resolve_resource(self.relations().transport.accept()) {
                     TcpAcceptResult::Accepted(connection) => connection,
                     TcpAcceptResult::Stopped => {
                         return Err(TcpTransportError::new(
@@ -84,7 +84,7 @@ fabric::component! {
 
         runtime {
             fn read_first_bytes(&self, max_bytes: usize) -> Result<Vec<u8>, TcpTransportError> {
-                let connection = match self.relations().transport.accept() {
+                let connection = match resolve_resource(self.relations().transport.accept()) {
                     TcpAcceptResult::Accepted(connection) => connection,
                     TcpAcceptResult::Stopped => {
                         return Err(TcpTransportError::new(
@@ -119,14 +119,16 @@ fabric::component! {
             fn inspect_both(&self) -> (TcpTransportInspection, TcpTransportInspection) {
                 (
                     TcpTransportInspection {
-                        requested: self.relations().api.requested_bind_address(),
-                        actual: self.relations().api.actual_bound_address(),
-                        accepted_connections: self.relations().api.accepted_connections(),
+                        requested: resolve_resource(self.relations().api.requested_bind_address()),
+                        actual: resolve_resource(self.relations().api.actual_bound_address()),
+                        accepted_connections: resolve_resource(self.relations().api.accepted_connections(),
+                        ),
                     },
                     TcpTransportInspection {
-                        requested: self.relations().control.requested_bind_address(),
-                        actual: self.relations().control.actual_bound_address(),
-                        accepted_connections: self.relations().control.accepted_connections(),
+                        requested: resolve_resource(self.relations().control.requested_bind_address()),
+                        actual: resolve_resource(self.relations().control.actual_bound_address()),
+                        accepted_connections: resolve_resource(self.relations().control.accepted_connections(),
+                        ),
                     },
                 )
             }
@@ -192,6 +194,15 @@ fn bind_dual_inspector(
             &control,
         );
     FabricContribution::new().component(component)
+}
+
+fn resolve_resource<T>(mut future: fabric::resource::ResourceFuture<'_, T>) -> T {
+    let waker = std::task::Waker::noop();
+    let mut context = std::task::Context::from_waker(waker);
+    match future.as_mut().poll(&mut context) {
+        std::task::Poll::Ready(value) => value,
+        std::task::Poll::Pending => panic!("TCP test resource operation unexpectedly yielded"),
+    }
 }
 
 fn composition(id: &str) -> Composition {

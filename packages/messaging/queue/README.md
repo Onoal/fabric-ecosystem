@@ -46,6 +46,14 @@ receive returns None
 There is no ack, nack, redelivery, visibility timeout, persistence, recovery,
 or durable broker behavior.
 
+Queue Resource operations are awaitable like all Fabric Resource operations:
+
+```rust
+let sent = jobs.send(b"job".to_vec()).await;
+let message = jobs.try_receive().await;
+let depth = jobs.depth().await;
+```
+
 ## Lifecycle
 
 `InMemoryQueue` state is live Instance generation state. A fresh materialization
@@ -65,21 +73,10 @@ shared destructive receive. No special `CompetingConsumer` Component is needed.
 
 ## Consumer-Owned Component Shape
 
-```rust
-fabric::component! {
-    Worker {
-        relations { requires { jobs: FifoQueue; } }
-
-        api { fn process_one(&self) -> Option<Vec<u8>>; }
-
-        runtime {
-            fn process_one(&self) -> Option<Vec<u8>> {
-                self.relations().jobs.try_receive().map(|message| message.payload)
-            }
-        }
-    }
-}
-```
+Consumer-owned Components should require `FifoQueue` directly and own their
+application behavior. Current Fabric Component runtime methods are synchronous,
+so local examples bridge immediate Resource operations at that boundary. The
+Resource contract itself remains awaitable.
 
 ## Extension Path
 

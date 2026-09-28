@@ -27,7 +27,7 @@ fabric::component! {
 
         runtime {
             fn emit_info(&self, message: String) -> Result<(), LogError> {
-                self.relations().sink.emit(LogRecord::new(LogLevel::Info, message))
+                resolve_resource(self.relations().sink.emit(LogRecord::new(LogLevel::Info, message)))
             }
 
             fn emit_records(&self) -> Result<TestEmissionResult, LogError> {
@@ -37,7 +37,7 @@ fabric::component! {
                     LogRecord::targeted(LogLevel::Error, "application", "application error"),
                 ];
                 for record in records.clone() {
-                    self.relations().sink.emit(record)?;
+                    resolve_resource(self.relations().sink.emit(record))?;
                 }
                 Ok(TestEmissionResult { emitted: records })
             }
@@ -72,8 +72,8 @@ fabric::component! {
                     "security",
                     "security event",
                 );
-                self.relations().application.emit(application.clone())?;
-                self.relations().security.emit(security.clone())?;
+                resolve_resource(self.relations().application.emit(application.clone()))?;
+                resolve_resource(self.relations().security.emit(security.clone()))?;
                 Ok(TestEmissionResult {
                     emitted: vec![application, security],
                 })
@@ -132,6 +132,17 @@ fn dual_logging_app(
             &security,
         );
     FabricContribution::new().component(component)
+}
+
+fn resolve_resource<T>(mut future: fabric::resource::ResourceFuture<'_, T>) -> T {
+    let waker = std::task::Waker::noop();
+    let mut context = std::task::Context::from_waker(waker);
+    match future.as_mut().poll(&mut context) {
+        std::task::Poll::Ready(value) => value,
+        std::task::Poll::Pending => {
+            panic!("logging test resource operation unexpectedly yielded")
+        }
+    }
 }
 
 #[test]

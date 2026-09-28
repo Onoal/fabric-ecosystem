@@ -55,27 +55,27 @@ fabric::component! {
 
         runtime {
             fn exercise_backend(&self) -> Result<BackendConsumerResult, BackendConsumerError> {
-                self.relations().database.execute(
+                resolve_resource(self.relations().database.execute(
                     "CREATE TABLE IF NOT EXISTS third_party_backend_items (id INTEGER, value TEXT NOT NULL)".to_owned(),
                     vec![],
-                )?;
-                self.relations().database.execute(
+                ))?;
+                resolve_resource(self.relations().database.execute(
                     "INSERT INTO third_party_backend_items (id, value) VALUES (?1, ?2)".to_owned(),
                     vec![
                         RelationalValue::Integer(1),
                         RelationalValue::Text("backend-consumer".to_owned()),
                     ],
-                )?;
-                let rows = self.relations().database.query(
+                ))?;
+                let rows = resolve_resource(self.relations().database.query(
                     "SELECT id, value FROM third_party_backend_items ORDER BY id".to_owned(),
                     vec![],
-                )?;
+                ))?;
                 let logged = LogRecord::targeted(
                     fabric_package_observability_logging::LogLevel::Info,
                     "third-party-local-backend",
                     "third-party backend app used local backend foundation",
                 );
-                self.relations().log.emit(logged.clone())?;
+                resolve_resource(self.relations().log.emit(logged.clone()))?;
                 Ok(BackendConsumerResult { rows, logged })
             }
         }
@@ -104,6 +104,17 @@ fn backend_consumer(
             &log,
         );
     FabricContribution::new().component(component)
+}
+
+fn resolve_resource<T>(mut future: fabric::resource::ResourceFuture<'_, T>) -> T {
+    let waker = std::task::Waker::noop();
+    let mut context = std::task::Context::from_waker(waker);
+    match future.as_mut().poll(&mut context) {
+        std::task::Poll::Ready(value) => value,
+        std::task::Poll::Pending => {
+            panic!("third-party composition resource operation unexpectedly yielded")
+        }
+    }
 }
 
 #[test]

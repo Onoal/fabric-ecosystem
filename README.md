@@ -73,6 +73,10 @@ Package topology is domain-first. It is intentionally not split into
 `resources/`, `systems/`, `components/`, or `adapters/`, because a real package
 may contain all of those Fabric authoring forms.
 
+Fabric Resource operations are uniformly awaitable. Local realizations may
+complete immediately, but consumers use the same awaitable operation boundary
+that event-loop-backed realizations need.
+
 `hosts/` is reserved for reusable environment artifacts built on Fabric's
 existing Host model. Host artifacts project evidence into ordinary
 `HostDescriptor` / `HostRequirement` truth; they are not Resources, Systems,

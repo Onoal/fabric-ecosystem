@@ -17,6 +17,16 @@ opaque byte values.
 - `set(key, value) -> Result<(), KeyValueError>`
 - `delete(key) -> Result<Option<Vec<u8>>, KeyValueError>`
 
+All three operations are Fabric Resource operations and are therefore invoked
+through the uniform awaitable Resource boundary:
+
+```rust
+let value = store.get("session".to_owned()).await?;
+store.set("session".to_owned(), b"active".to_vec()).await?;
+let deleted = store.delete("session".to_owned()).await?;
+# Ok::<(), KeyValueError>(())
+```
+
 Missing keys are normal data state, not operation failure:
 
 - `get(missing)` returns `Ok(None)`.

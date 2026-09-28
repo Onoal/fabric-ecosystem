@@ -5,9 +5,9 @@ fabric::resource! {
         id: "onoal.package.data.key-value";
 
         api {
-            fn get(&self, key: String) -> Result<Option<Vec<u8>>, KeyValueError>;
-            fn set(&self, key: String, value: Vec<u8>) -> Result<(), KeyValueError>;
-            fn delete(&self, key: String) -> Result<Option<Vec<u8>>, KeyValueError>;
+            async fn get(&self, key: String) -> Result<Option<Vec<u8>>, KeyValueError>;
+            async fn set(&self, key: String, value: Vec<u8>) -> Result<(), KeyValueError>;
+            async fn delete(&self, key: String) -> Result<Option<Vec<u8>>, KeyValueError>;
         }
     }
 }

@@ -21,7 +21,7 @@ fabric::adapter! {
         }
 
         runtime {
-            fn send(&self, payload: Vec<u8>) -> QueueSendResult {
+            async fn send(&self, payload: Vec<u8>) -> QueueSendResult {
                 let mut messages = self
                     .state
                     .get()
@@ -38,7 +38,7 @@ fabric::adapter! {
                 }
             }
 
-            fn try_receive(&self) -> Option<QueueMessage> {
+            async fn try_receive(&self) -> Option<QueueMessage> {
                 self.state
                     .get()
                     .messages
@@ -47,7 +47,7 @@ fabric::adapter! {
                     .pop_front()
             }
 
-            fn depth(&self) -> usize {
+            async fn depth(&self) -> usize {
                 self.state
                     .get()
                     .messages
