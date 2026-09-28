@@ -1,7 +1,7 @@
 # Fabric Ecosystem
 
-Shareable Fabric artifacts: reusable packages, future reusable compositions,
-and runnable examples.
+Shareable Fabric artifacts: reusable packages, reusable compositions, Host
+artifacts, runnable examples, compatibility fixtures, and a generated Catalog.
 
 Fabric itself provides the semantic systems-construction model. Fabric
 Ecosystem contains source artifacts built with Fabric.
@@ -14,7 +14,7 @@ Fabric Ecosystem
   |-- packages/      reusable capability building material
   |-- hosts/         reusable Host/environment artifacts
   |-- compositions/  reusable assembled systems
-  |-- examples/      teaching and demonstrations
+  |-- examples/      runnable teaching applications
   |-- tests/         compatibility and integration verification
   |-- catalog/       discovery and navigation contract
   `-- docs/          architecture and repository guidance
@@ -29,7 +29,7 @@ Fabric Ecosystem
 - `packages/execution/process-runtime`: a run-to-completion local process
   execution capability with invocation, output, and error models.
 - `packages/messaging/queue`: a bounded non-durable FIFO queue capability with
-  in-memory live state and producer/consumer component witnesses.
+  generation-local in-memory realization.
 - `packages/networking/tcp`: a loopback TCP byte-stream transport capability with real
   OS bind/connect/accept/read/write behavior and runtime inspection.
 - `packages/networking/http`: HTTP/1 server behavior layered over the TCP
@@ -77,8 +77,8 @@ Components, Adapters, or parallel Host ontologies.
 `compositions/` contains coherent reusable assembled systems. It is not a
 package bucket and not a second Fabric runtime primitive.
 
-`examples/` contains learning artifacts. Examples may be explicit and
-pedagogical; they are not compatibility fixtures.
+`examples/` contains runnable teaching applications. Examples may be explicit
+and pedagogical; they are not compatibility fixtures or reusable package APIs.
 
 `tests/` contains cross-package integration, compatibility, and third-party
 public-consumer verification.
@@ -90,3 +90,25 @@ public-consumer verification.
 
 Catalog metadata helps humans and tools find artifacts; it does not duplicate
 Fabric semantic truth.
+
+## Verification
+
+The canonical repository quality gate runs on pull requests and pushes to
+`main` on Linux with stable Rust. It uses the committed `Cargo.lock` for Cargo
+commands that resolve dependencies.
+
+Run the same gate locally from the repository root:
+
+```text
+cargo fmt --all -- --check
+cargo check --workspace --all-targets --locked
+cargo test --workspace --locked
+cargo clippy --workspace --all-targets --locked -- -D warnings
+cargo run --locked -p fabric-ecosystem-catalog-tool -- check
+cargo run --locked -p fabric-ecosystem-catalog-tool -- validate
+```
+
+`cargo test --workspace --locked` includes the third-party public compatibility
+fixture and the example binary smoke tests. Catalog `check` proves the committed
+projection is current with repository source truth; Catalog `validate` proves
+the committed machine document satisfies the strict Catalog v1 contract.
