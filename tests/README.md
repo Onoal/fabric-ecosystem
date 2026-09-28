@@ -1,18 +1,9 @@
 # Tests
 
-`tests/` owns compatibility and integration verification.
+This tree contains compatibility and integration fixtures that are not
+ecosystem artifacts.
 
-This family is distinct from `examples/`:
-
-```text
-examples/ = teaching artifacts
-tests/    = behavioral and public-consumer witnesses
-```
-
-Tests may be runnable, but their primary responsibility is preserving
-cross-package behavior, public API compatibility, third-party consumption, and
-regression coverage.
-
-`tests/third-party-consumer` proves that ecosystem packages compose through
-published public Fabric surfaces and package APIs rather than private
-repository internals.
+`third-party-consumer` is the public compatibility boundary. It is shaped like
+an independent downstream crate and uses only public Fabric Ecosystem APIs. It
+is intentionally excluded from Catalog projection because it is not a Package,
+Host, Composition, or Example.
