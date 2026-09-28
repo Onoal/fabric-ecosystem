@@ -1,0 +1,15 @@
+[package]
+name = "onoal-fabric-instance-http-server"
+description = "Long-running HTTP server Instance artifact for Fabric Ecosystem"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+readme = "README.md"
+
+[dependencies]
+fabric.workspace = true
+fabric-composition-http-server.workspace = true
+fabric-package-networking-http.workspace = true
+fabric-package-networking-tcp.workspace = true
+futures.workspace = true

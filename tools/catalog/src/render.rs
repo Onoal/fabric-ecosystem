@@ -28,6 +28,7 @@ fn render_markdown(catalog: &CatalogIndex) -> String {
         ArtifactKind::Package,
         ArtifactKind::Host,
         ArtifactKind::Composition,
+        ArtifactKind::Instance,
         ArtifactKind::Example,
     ] {
         output.push_str(&format!("## {}\n\n", kind.heading()));
@@ -92,7 +93,7 @@ fn markdown_link(path: &str) -> String {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::model::{CatalogDependencies, SCHEMA_VERSION};
+    use crate::model::{CatalogDependencies, CURRENT_SCHEMA_VERSION};
 
     fn artifact(path: &str, kind: ArtifactKind, category: Option<&str>) -> CatalogArtifact {
         CatalogArtifact {
@@ -111,7 +112,7 @@ mod tests {
     #[test]
     fn rendering_is_deterministically_sorted_by_path() {
         let mut catalog = CatalogIndex {
-            schema_version: SCHEMA_VERSION,
+            schema_version: CURRENT_SCHEMA_VERSION,
             artifacts: vec![
                 artifact(
                     "packages/networking/tcp",
@@ -144,7 +145,7 @@ mod tests {
     #[test]
     fn json_contains_schema_version_and_required_fields() {
         let catalog = CatalogIndex {
-            schema_version: SCHEMA_VERSION,
+            schema_version: CURRENT_SCHEMA_VERSION,
             artifacts: vec![artifact(
                 "packages/data/key-value",
                 ArtifactKind::Package,
@@ -152,7 +153,7 @@ mod tests {
             )],
         };
         let rendered = render_catalog(&catalog).expect("render");
-        assert!(rendered.json.contains("\"schemaVersion\": 1"));
+        assert!(rendered.json.contains("\"schemaVersion\": 2"));
         assert!(rendered.json.contains("\"cargoPackage\""));
         assert!(rendered.json.ends_with('\n'));
     }
@@ -160,7 +161,7 @@ mod tests {
     #[test]
     fn markdown_groups_by_kind_and_category() {
         let catalog = CatalogIndex {
-            schema_version: SCHEMA_VERSION,
+            schema_version: CURRENT_SCHEMA_VERSION,
             artifacts: vec![
                 artifact("hosts/linux", ArtifactKind::Host, None),
                 artifact(
@@ -176,5 +177,21 @@ mod tests {
         assert!(markdown.contains("- [key-value](../packages/data/key-value)"));
         assert!(markdown.contains("## Hosts"));
         assert!(markdown.contains("- [linux](../hosts/linux)"));
+    }
+
+    #[test]
+    fn markdown_includes_instances_by_category() {
+        let catalog = CatalogIndex {
+            schema_version: CURRENT_SCHEMA_VERSION,
+            artifacts: vec![artifact(
+                "instances/web/http-server",
+                ArtifactKind::Instance,
+                Some("web"),
+            )],
+        };
+        let markdown = render_markdown(&catalog);
+        assert!(markdown.contains("## Instances"));
+        assert!(markdown.contains("### web"));
+        assert!(markdown.contains("- [http-server](../instances/web/http-server)"));
     }
 }

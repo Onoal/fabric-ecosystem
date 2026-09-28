@@ -2,6 +2,7 @@
 members = [
     "compositions/web/http-server",
     "compositions/web/local-backend",
+    "instances/web/http-server",
     "examples/key-value-quickstart",
     "examples/http-server",
     "examples/local-backend",

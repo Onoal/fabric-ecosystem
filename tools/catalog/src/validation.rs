@@ -1,10 +1,11 @@
 use std::collections::BTreeSet;
 
 use crate::error::CatalogError;
-use crate::model::{ArtifactKind, CatalogArtifact, CatalogIndex};
+use crate::model::{ArtifactKind, CatalogArtifact, CatalogIndex, CATALOG_V1, CATALOG_V2};
 use crate::query::{artifact_kind_label, DependencyKind};
 
 pub(crate) fn validate_catalog_index(index: &CatalogIndex) -> Result<(), CatalogError> {
+    let schema = CatalogSchema::from_version(index.schema_version)?;
     let mut artifact_paths = BTreeSet::new();
     let mut cargo_packages = BTreeSet::new();
     let mut previous_path: Option<&str> = None;
@@ -13,25 +14,28 @@ pub(crate) fn validate_catalog_index(index: &CatalogIndex) -> Result<(), Catalog
         if let Some(previous) = previous_path {
             if previous == artifact.path {
                 return Err(CatalogError::new(format!(
-                    "invalid Catalog v1 structure: duplicate artifact path: {}",
+                    "invalid Catalog {} structure: duplicate artifact path: {}",
+                    schema.label(),
                     artifact.path
                 )));
             }
             if previous > artifact.path.as_str() {
                 return Err(CatalogError::new(format!(
-                    "invalid Catalog v1 structure: artifacts must be sorted by path: {previous} before {}",
+                    "invalid Catalog {} structure: artifacts must be sorted by path: {previous} before {}",
+                    schema.label(),
                     artifact.path
                 )));
             }
         }
         previous_path = Some(&artifact.path);
 
-        validate_artifact(artifact)?;
+        validate_artifact(schema, artifact)?;
 
         artifact_paths.insert(artifact.path.as_str());
         if !cargo_packages.insert(artifact.cargo_package.as_str()) {
             return Err(CatalogError::new(format!(
-                "invalid Catalog v1 structure: duplicate Cargo package: {}",
+                "invalid Catalog {} structure: duplicate Cargo package: {}",
+                schema.label(),
                 artifact.cargo_package
             )));
         }
@@ -39,18 +43,47 @@ pub(crate) fn validate_catalog_index(index: &CatalogIndex) -> Result<(), Catalog
 
     for artifact in &index.artifacts {
         for kind in DependencyKind::all() {
-            validate_dependency_group(artifact, kind, &artifact_paths)?;
+            validate_dependency_group(schema, artifact, kind, &artifact_paths)?;
         }
     }
 
     Ok(())
 }
 
-fn validate_artifact(artifact: &CatalogArtifact) -> Result<(), CatalogError> {
-    let path = classify_catalog_path(&artifact.path)?;
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+enum CatalogSchema {
+    V1,
+    V2,
+}
+
+impl CatalogSchema {
+    fn from_version(version: u8) -> Result<Self, CatalogError> {
+        match version {
+            CATALOG_V1 => Ok(Self::V1),
+            CATALOG_V2 => Ok(Self::V2),
+            other => Err(CatalogError::new(format!(
+                "unsupported Catalog schema version: {other}"
+            ))),
+        }
+    }
+
+    fn label(self) -> &'static str {
+        match self {
+            Self::V1 => "v1",
+            Self::V2 => "v2",
+        }
+    }
+}
+
+fn validate_artifact(
+    schema: CatalogSchema,
+    artifact: &CatalogArtifact,
+) -> Result<(), CatalogError> {
+    let path = classify_catalog_path(schema, &artifact.path)?;
     if path.kind != artifact.kind {
         return Err(CatalogError::new(format!(
-            "invalid Catalog v1 structure: kind/path mismatch for {}: declared {} but path implies {}",
+            "invalid Catalog {} structure: kind/path mismatch for {}: declared {} but path implies {}",
+            schema.label(),
             artifact.path,
             artifact_kind_label(&artifact.kind),
             artifact_kind_label(&path.kind)
@@ -61,20 +94,23 @@ fn validate_artifact(artifact: &CatalogArtifact) -> Result<(), CatalogError> {
         (Some(expected), Some(actual)) if actual == expected => {}
         (Some(expected), Some(actual)) => {
             return Err(CatalogError::new(format!(
-                "invalid Catalog v1 structure: category/path mismatch for {}: declared {actual} but path implies {expected}",
+                "invalid Catalog {} structure: category/path mismatch for {}: declared {actual} but path implies {expected}",
+                schema.label(),
                 artifact.path
             )));
         }
         (Some(_), None) => {
             return Err(CatalogError::new(format!(
-                "invalid Catalog v1 structure: {} requires category: {}",
+                "invalid Catalog {} structure: {} requires category: {}",
+                schema.label(),
                 artifact_kind_label(&artifact.kind),
                 artifact.path
             )));
         }
         (None, Some(_)) => {
             return Err(CatalogError::new(format!(
-                "invalid Catalog v1 structure: {} must not have category: {}",
+                "invalid Catalog {} structure: {} must not have category: {}",
+                schema.label(),
                 artifact_kind_label(&artifact.kind),
                 artifact.path
             )));
@@ -84,19 +120,22 @@ fn validate_artifact(artifact: &CatalogArtifact) -> Result<(), CatalogError> {
 
     if artifact.cargo_package.is_empty() {
         return Err(CatalogError::new(format!(
-            "invalid Catalog v1 structure: cargoPackage must be non-empty: {}",
+            "invalid Catalog {} structure: cargoPackage must be non-empty: {}",
+            schema.label(),
             artifact.path
         )));
     }
     if artifact.version.is_empty() {
         return Err(CatalogError::new(format!(
-            "invalid Catalog v1 structure: version must be non-empty: {}",
+            "invalid Catalog {} structure: version must be non-empty: {}",
+            schema.label(),
             artifact.path
         )));
     }
     if artifact.description.trim().is_empty() {
         return Err(CatalogError::new(format!(
-            "invalid Catalog v1 structure: description must contain non-whitespace content: {}",
+            "invalid Catalog {} structure: description must contain non-whitespace content: {}",
+            schema.label(),
             artifact.path
         )));
     }
@@ -104,7 +143,8 @@ fn validate_artifact(artifact: &CatalogArtifact) -> Result<(), CatalogError> {
         let expected = format!("{}/README.md", artifact.path);
         if readme != &expected {
             return Err(CatalogError::new(format!(
-                "invalid Catalog v1 structure: README path for {} must be {expected}",
+                "invalid Catalog {} structure: README path for {} must be {expected}",
+                schema.label(),
                 artifact.path
             )));
         }
@@ -114,6 +154,7 @@ fn validate_artifact(artifact: &CatalogArtifact) -> Result<(), CatalogError> {
 }
 
 fn validate_dependency_group(
+    schema: CatalogSchema,
     artifact: &CatalogArtifact,
     kind: DependencyKind,
     artifact_paths: &BTreeSet<&str>,
@@ -123,7 +164,8 @@ fn validate_dependency_group(
         if let Some(previous_dependency) = previous {
             if previous_dependency == dependency {
                 return Err(CatalogError::new(format!(
-                    "invalid Catalog v1 structure: duplicate {} Cargo dependency reference in {}: {}",
+                    "invalid Catalog {} structure: duplicate {} Cargo dependency reference in {}: {}",
+                    schema.label(),
                     kind.label(),
                     artifact.path,
                     dependency
@@ -131,7 +173,8 @@ fn validate_dependency_group(
             }
             if previous_dependency > dependency.as_str() {
                 return Err(CatalogError::new(format!(
-                    "invalid Catalog v1 structure: {} Cargo dependencies in {} must be sorted lexicographically",
+                    "invalid Catalog {} structure: {} Cargo dependencies in {} must be sorted lexicographically",
+                    schema.label(),
                     kind.label(),
                     artifact.path
                 )));
@@ -141,7 +184,8 @@ fn validate_dependency_group(
 
         if !artifact_paths.contains(dependency.as_str()) {
             return Err(CatalogError::new(format!(
-                "invalid Catalog v1 structure: dangling {} Cargo dependency reference in {}: {}",
+                "invalid Catalog {} structure: dangling {} Cargo dependency reference in {}: {}",
+                schema.label(),
                 kind.label(),
                 artifact.path,
                 dependency
@@ -157,7 +201,10 @@ struct PathClassification {
     category: Option<String>,
 }
 
-fn classify_catalog_path(path: &str) -> Result<PathClassification, CatalogError> {
+fn classify_catalog_path(
+    schema: CatalogSchema,
+    path: &str,
+) -> Result<PathClassification, CatalogError> {
     if path.is_empty()
         || path.starts_with('/')
         || path.ends_with('/')
@@ -167,12 +214,13 @@ fn classify_catalog_path(path: &str) -> Result<PathClassification, CatalogError>
             .any(|segment| segment.is_empty() || segment == "." || segment == "..")
     {
         return Err(CatalogError::new(format!(
-            "invalid Catalog v1 path: {path}"
+            "invalid Catalog {} path: {path}",
+            schema.label()
         )));
     }
 
     let segments = path.split('/').collect::<Vec<_>>();
-    match segments.as_slice() {
+    let classification = match segments.as_slice() {
         ["packages", category, _artifact] => Ok(PathClassification {
             kind: ArtifactKind::Package,
             category: Some((*category).to_owned()),
@@ -185,20 +233,28 @@ fn classify_catalog_path(path: &str) -> Result<PathClassification, CatalogError>
             kind: ArtifactKind::Composition,
             category: Some((*category).to_owned()),
         }),
+        ["instances", category, _artifact] if schema == CatalogSchema::V2 => {
+            Ok(PathClassification {
+                kind: ArtifactKind::Instance,
+                category: Some((*category).to_owned()),
+            })
+        }
         ["examples", _artifact] => Ok(PathClassification {
             kind: ArtifactKind::Example,
             category: None,
         }),
         _ => Err(CatalogError::new(format!(
-            "invalid Catalog v1 topology: {path}"
+            "invalid Catalog {} topology: {path}",
+            schema.label()
         ))),
-    }
+    }?;
+    Ok(classification)
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::model::{CatalogDependencies, SCHEMA_VERSION};
+    use crate::model::{CatalogDependencies, CATALOG_V1, CATALOG_V2};
 
     fn artifact(path: &str, kind: ArtifactKind, category: Option<&str>) -> CatalogArtifact {
         CatalogArtifact {
@@ -214,11 +270,18 @@ mod tests {
         }
     }
 
-    fn validate(artifacts: Vec<CatalogArtifact>) -> Result<(), CatalogError> {
+    fn validate_as(
+        schema_version: u8,
+        artifacts: Vec<CatalogArtifact>,
+    ) -> Result<(), CatalogError> {
         validate_catalog_index(&CatalogIndex {
-            schema_version: SCHEMA_VERSION,
+            schema_version,
             artifacts,
         })
+    }
+
+    fn validate(artifacts: Vec<CatalogArtifact>) -> Result<(), CatalogError> {
+        validate_as(CATALOG_V2, artifacts)
     }
 
     #[test]
@@ -232,12 +295,42 @@ mod tests {
             artifact("examples/http-server", ArtifactKind::Example, None),
             artifact("hosts/linux", ArtifactKind::Host, None),
             artifact(
+                "instances/web/http-server",
+                ArtifactKind::Instance,
+                Some("web"),
+            ),
+            artifact(
                 "packages/networking/http",
                 ArtifactKind::Package,
                 Some("networking"),
             ),
         ])
         .expect("valid topology");
+    }
+
+    #[test]
+    fn v1_rejects_instance_topology() {
+        assert!(validate_as(
+            CATALOG_V1,
+            vec![artifact(
+                "instances/web/http-server",
+                ArtifactKind::Instance,
+                Some("web")
+            )]
+        )
+        .unwrap_err()
+        .to_string()
+        .contains("invalid Catalog v1 topology"));
+    }
+
+    #[test]
+    fn unsupported_schema_rejects() {
+        assert_eq!(
+            validate_as(CATALOG_V2 + 1, Vec::new())
+                .unwrap_err()
+                .to_string(),
+            "unsupported Catalog schema version: 3"
+        );
     }
 
     #[test]
@@ -254,6 +347,15 @@ mod tests {
         assert!(validate(vec![artifact(
             "compositions/web/http-server",
             ArtifactKind::Composition,
+            Some("networking")
+        )])
+        .unwrap_err()
+        .to_string()
+        .contains("category/path mismatch"));
+
+        assert!(validate(vec![artifact(
+            "instances/web/http-server",
+            ArtifactKind::Instance,
             Some("networking")
         )])
         .unwrap_err()
@@ -301,7 +403,7 @@ mod tests {
                 validate(vec![artifact(path, ArtifactKind::Package, Some("data"))])
                     .unwrap_err()
                     .to_string()
-                    .contains("invalid Catalog v1 path"),
+                    .contains("invalid Catalog v2 path"),
                 "{path}"
             );
         }
@@ -313,7 +415,7 @@ mod tests {
         )])
         .unwrap_err()
         .to_string()
-        .contains("invalid Catalog v1 topology"));
+        .contains("invalid Catalog v2 topology"));
     }
 
     #[test]

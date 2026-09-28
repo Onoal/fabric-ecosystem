@@ -1,8 +1,8 @@
 # Fabric Ecosystem Architecture
 
 Fabric Ecosystem is the source home for shareable artifacts built with Fabric:
-Packages, Host artifacts, Compositions, Examples, tests, and discovery
-catalogs.
+Packages, Host artifacts, Compositions, Instance artifacts, Examples, tests,
+and discovery catalogs.
 
 ```text
 FABRIC CORE
@@ -19,6 +19,10 @@ PACKAGES
         v
 COMPOSITIONS
     reusable assembled systems
+        |
+        v
+INSTANCE ARTIFACTS
+    runnable operational entrypoints
 
 HOSTS
     reusable environment truth helpers
@@ -38,16 +42,23 @@ Fabric semantic primitives.
 - Package = reusable building material.
 - Host artifact = reusable environment description/detection/authoring.
 - Composition artifact = reusable assembled system.
+- Instance artifact = runnable operational source entrypoint.
 - Example = teaching or demonstration artifact.
 - Test = compatibility or integration verification.
 - Catalog = discovery/index/navigation view.
 
-Package != Host artifact. Package != Composition. Composition != Example.
-Example != Test. Catalog != Fabric semantic truth.
+Package != Host artifact. Package != Composition. Composition != Instance
+artifact. Instance artifact != Example. Example != Test. Catalog != Fabric
+semantic truth.
+
+An Instance artifact is repository source that materializes and operates a live
+`fabric::Instance` occurrence. It is not the live `fabric::Instance` itself,
+not persisted runtime state, not a scheduler/control plane, and not a second
+Fabric Instance ontology.
 
 None of these repository artifact kinds introduces `PackageId`,
-`HostPackageId`, `CompositionArtifactId`, `ExampleId`, `EcosystemArtifact`, or
-`EcosystemRuntime`.
+`HostPackageId`, `CompositionArtifactId`, `InstanceArtifactId`, `ExampleId`,
+`EcosystemArtifact`, or `EcosystemRuntime`.
 
 Repository taxonomy is not Fabric ontology. A folder named `data`,
 `networking`, or `security` helps humans and tools navigate source ownership;
@@ -559,7 +570,7 @@ repository artifact kind != Fabric semantic kind
 Cargo dependency edge != Fabric semantic relation
 ```
 
-Catalog v1 does not extract Resource, System, Component, Adapter, Config,
+Catalog v2 does not extract Resource, System, Component, Adapter, Config,
 relation, Host requirement, or Composition graph definitions. A future Catalog
 view may consume a canonical Fabric definition projection, but it must not
 invent a brittle source parser as an alternate semantic owner.
@@ -575,10 +586,10 @@ Consumers may derive navigation results such as reverse Cargo dependency edges
 from the committed JSON document. Those query results do not become persisted
 Catalog truth.
 
-Catalog schema evolution is explicit and versioned. A v1 consumer does not
+Catalog schema evolution is explicit and versioned. A Catalog consumer does not
 best-effort unknown persisted meaning: unknown fields, new persisted artifact
 kinds, changed field meanings, or changed identity/reference rules require a
-new schema version. Derived query behavior over existing v1 fields may evolve
+new schema version. Derived query behavior over existing fields may evolve
 without changing the document contract.
 
 ## Scalability pressure

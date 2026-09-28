@@ -40,6 +40,13 @@ fn committed_catalog_can_be_consumed_without_source_discovery() {
             .cargo_package,
         "fabric-ecosystem-example-ed25519-signing"
     );
+    assert_eq!(
+        catalog
+            .artifact_by_path("instances/web/http-server")
+            .expect("http server instance")
+            .cargo_package,
+        "onoal-fabric-instance-http-server"
+    );
 
     let http_server_dependencies = catalog
         .direct_dependencies("compositions/web/http-server")
@@ -57,6 +64,10 @@ fn committed_catalog_can_be_consumed_without_source_discovery() {
         .expect("dependents");
     assert!(tcp_dependents.iter().any(|dependent| {
         dependent.artifact.path == "compositions/web/http-server"
+            && dependent.kind == fabric_ecosystem_catalog_tool::DependencyKind::Normal
+    }));
+    assert!(tcp_dependents.iter().any(|dependent| {
+        dependent.artifact.path == "instances/web/http-server"
             && dependent.kind == fabric_ecosystem_catalog_tool::DependencyKind::Normal
     }));
 }

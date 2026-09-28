@@ -522,6 +522,17 @@ dependencies = [
 ]
 
 [[package]]
+name = "onoal-fabric-instance-http-server"
+version = "0.1.0"
+dependencies = [
+ "futures",
+ "onoal-fabric",
+ "onoal-fabric-composition-http-server",
+ "onoal-fabric-package-networking-http",
+ "onoal-fabric-package-networking-tcp",
+]
+
+[[package]]
 name = "onoal-fabric-package-key-value"
 version = "0.1.0"
 dependencies = [

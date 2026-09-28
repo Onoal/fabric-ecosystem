@@ -5,7 +5,7 @@ use std::path::{Component, Path, PathBuf};
 
 use crate::error::CatalogError;
 use crate::model::{
-    ArtifactKind, CatalogArtifact, CatalogDependencies, CatalogIndex, SCHEMA_VERSION,
+    ArtifactKind, CatalogArtifact, CatalogDependencies, CatalogIndex, CURRENT_SCHEMA_VERSION,
 };
 use crate::workspace::{CargoPackage, Workspace};
 
@@ -73,7 +73,7 @@ pub(crate) fn discover_catalog(workspace: &Workspace) -> Result<CatalogIndex, Ca
     artifacts.sort_by(|left, right| left.path.cmp(&right.path));
 
     Ok(CatalogIndex {
-        schema_version: SCHEMA_VERSION,
+        schema_version: CURRENT_SCHEMA_VERSION,
         artifacts,
     })
 }
@@ -116,14 +116,22 @@ fn classify_path(path: &str) -> Result<Classification, CatalogError> {
             kind: ArtifactKind::Composition,
             category: Some((*category).to_owned()),
         }),
+        ["instances", category, _artifact] => Ok(Classification::Cataloged {
+            kind: ArtifactKind::Instance,
+            category: Some((*category).to_owned()),
+        }),
         ["examples", _artifact] => Ok(Classification::Cataloged {
             kind: ArtifactKind::Example,
             category: None,
         }),
         ["tests", ..] | ["tools", ..] => Ok(Classification::Ignored),
-        ["packages", ..] | ["hosts", ..] | ["compositions", ..] | ["examples", ..] => Err(
-            CatalogError::new(format!("unsupported catalog artifact path: {path}")),
-        ),
+        ["packages", ..]
+        | ["hosts", ..]
+        | ["compositions", ..]
+        | ["instances", ..]
+        | ["examples", ..] => Err(CatalogError::new(format!(
+            "unsupported catalog artifact path: {path}"
+        ))),
         _ => Ok(Classification::Ignored),
     }
 }
@@ -133,7 +141,7 @@ fn validate_supported_cargo_tomls_are_workspace_members<'a>(
     cataloged_paths: impl IntoIterator<Item = &'a String>,
 ) -> Result<(), CatalogError> {
     let represented: BTreeSet<_> = cataloged_paths.into_iter().cloned().collect();
-    for root in ["packages", "hosts", "compositions", "examples"] {
+    for root in ["packages", "hosts", "compositions", "instances", "examples"] {
         let root_path = workspace.root.join(root);
         if !root_path.exists() {
             continue;
@@ -261,6 +269,13 @@ mod tests {
             }
         );
         assert_eq!(
+            classify_path("instances/web/http-server").expect("classification"),
+            Classification::Cataloged {
+                kind: ArtifactKind::Instance,
+                category: Some("web".to_owned())
+            }
+        );
+        assert_eq!(
             classify_path("tests/third-party-consumer").expect("classification"),
             Classification::Ignored
         );
@@ -276,6 +291,11 @@ mod tests {
         assert!(error
             .to_string()
             .contains("unsupported catalog artifact path: packages/data/foo/nested/bar"));
+
+        let error = classify_path("instances/web/http-server/extra").expect_err("invalid path");
+        assert!(error
+            .to_string()
+            .contains("unsupported catalog artifact path: instances/web/http-server/extra"));
     }
 
     #[test]

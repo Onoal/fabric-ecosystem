@@ -45,7 +45,11 @@ fn run(command: Command) -> Result<(), CatalogError> {
         }
         Command::Validate => {
             let catalog = reader::read_catalog_from(Path::new("."))?;
-            println!("Catalog v1 valid: {} artifacts", catalog.artifacts().len());
+            println!(
+                "Catalog v{} valid: {} artifacts",
+                catalog.schema_version(),
+                catalog.artifacts().len()
+            );
             Ok(())
         }
         Command::List => {
@@ -225,6 +229,14 @@ mod tests {
         assert!(Command::parse_args(None, &[]).is_err());
         assert!(
             Command::parse_args(Some("list-kind".to_owned()), &["list-kind".to_owned()]).is_err()
+        );
+        assert_eq!(
+            Command::parse_args(
+                Some("list-kind".to_owned()),
+                &["list-kind".to_owned(), "instance".to_owned()]
+            )
+            .expect("instance"),
+            Command::ListKind(model::ArtifactKind::Instance)
         );
         assert!(Command::parse_args(
             Some("list-kind".to_owned()),

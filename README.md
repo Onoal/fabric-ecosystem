@@ -1,7 +1,8 @@
 # Fabric Ecosystem
 
 Shareable Fabric artifacts: reusable packages, reusable compositions, Host
-artifacts, runnable examples, compatibility fixtures, and a generated Catalog.
+artifacts, runnable operational Instance entrypoints, runnable examples,
+compatibility fixtures, and a generated Catalog.
 
 Fabric itself provides the semantic systems-construction model. Fabric
 Ecosystem contains source artifacts built with Fabric.
@@ -14,6 +15,7 @@ Fabric Ecosystem
   |-- packages/      reusable capability building material
   |-- hosts/         reusable Host/environment artifacts
   |-- compositions/  reusable assembled systems
+  |-- instances/     runnable operational Instance entrypoints
   |-- examples/      runnable teaching applications
   |-- tests/         compatibility and integration verification
   |-- catalog/       discovery and navigation contract
@@ -48,6 +50,8 @@ Fabric Ecosystem
 - `compositions/web/local-backend`: a nested local backend foundation that
   reuses the HTTP Server Composition and adds SQLite persistence plus Console
   logging.
+- `instances/web/http-server`: the first long-running operational Instance
+  artifact, running the HTTP Server Composition as a live `fabric::Instance`.
 Messaging currently provides the `FifoQueue` package capability. A reusable
 messaging Composition will be added only when multiple genuinely useful
 messaging/runtime behaviors form a coherent assembled system.
@@ -76,6 +80,10 @@ Components, Adapters, or parallel Host ontologies.
 
 `compositions/` contains coherent reusable assembled systems. It is not a
 package bucket and not a second Fabric runtime primitive.
+
+`instances/` contains runnable operational entrypoints. An Instance artifact is
+source that materializes and operates a live `fabric::Instance`; it is not the
+live runtime Instance itself, persisted runtime state, or deployment policy.
 
 `examples/` contains runnable teaching applications. Examples may be explicit
 and pedagogical; they are not compatibility fixtures or reusable package APIs.
@@ -111,7 +119,7 @@ cargo run --locked -p fabric-ecosystem-catalog-tool -- validate
 `cargo test --workspace --locked` includes the third-party public compatibility
 fixture and the example binary smoke tests. Catalog `check` proves the committed
 projection is current with repository source truth; Catalog `validate` proves
-the committed machine document satisfies the strict Catalog v1 contract.
+the committed machine document satisfies the strict Catalog v2 contract.
 
 GitHub-hosted CI is not part of the repository verification model. GitHub may
 host the remote repository, but verification is an explicit local contract.

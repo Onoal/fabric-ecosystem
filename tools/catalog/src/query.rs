@@ -73,6 +73,10 @@ impl Catalog {
         &self.index.artifacts
     }
 
+    pub fn schema_version(&self) -> u8 {
+        self.index.schema_version
+    }
+
     pub fn artifact_by_path(&self, path: &str) -> Result<&CatalogArtifact, CatalogError> {
         self.by_path
             .get(path)
@@ -146,6 +150,7 @@ impl FromStr for ArtifactKind {
             "package" => Ok(Self::Package),
             "host" => Ok(Self::Host),
             "composition" => Ok(Self::Composition),
+            "instance" => Ok(Self::Instance),
             "example" => Ok(Self::Example),
             other => Err(CatalogError::new(format!(
                 "unsupported artifact kind: {other}"
@@ -159,6 +164,7 @@ pub(crate) fn artifact_kind_label(kind: &ArtifactKind) -> &'static str {
         ArtifactKind::Package => "package",
         ArtifactKind::Host => "host",
         ArtifactKind::Composition => "composition",
+        ArtifactKind::Instance => "instance",
         ArtifactKind::Example => "example",
     }
 }
@@ -166,7 +172,7 @@ pub(crate) fn artifact_kind_label(kind: &ArtifactKind) -> &'static str {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::model::SCHEMA_VERSION;
+    use crate::model::CURRENT_SCHEMA_VERSION;
     use crate::validation;
 
     fn artifact(path: &str, kind: ArtifactKind, category: Option<&str>) -> CatalogArtifact {
@@ -186,7 +192,7 @@ mod tests {
     fn catalog_with(mut artifacts: Vec<CatalogArtifact>) -> Catalog {
         artifacts.sort_by(|left, right| left.path.cmp(&right.path));
         let index = CatalogIndex {
-            schema_version: SCHEMA_VERSION,
+            schema_version: CURRENT_SCHEMA_VERSION,
             artifacts,
         };
         validation::validate_catalog_index(&index).expect("valid catalog fixture");
@@ -223,6 +229,10 @@ mod tests {
             "packages/networking/http"
         );
         assert_eq!(catalog.artifacts_by_kind(ArtifactKind::Package).len(), 2);
+        assert_eq!(
+            parse_artifact_kind("instance").expect("instance kind"),
+            ArtifactKind::Instance
+        );
         assert_eq!(catalog.artifacts_by_category("networking").len(), 1);
         assert_eq!(
             catalog

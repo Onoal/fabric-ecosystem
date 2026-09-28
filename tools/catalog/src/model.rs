@@ -1,6 +1,8 @@
 use serde::{Deserialize, Serialize};
 
-pub(crate) const SCHEMA_VERSION: u8 = 1;
+pub(crate) const CATALOG_V1: u8 = 1;
+pub(crate) const CATALOG_V2: u8 = 2;
+pub(crate) const CURRENT_SCHEMA_VERSION: u8 = CATALOG_V2;
 
 #[derive(Clone, Debug, Deserialize, Serialize, PartialEq, Eq)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
@@ -39,6 +41,7 @@ pub enum ArtifactKind {
     Package,
     Host,
     Composition,
+    Instance,
     Example,
 }
 
@@ -48,6 +51,7 @@ impl ArtifactKind {
             Self::Package => "Packages",
             Self::Host => "Hosts",
             Self::Composition => "Compositions",
+            Self::Instance => "Instances",
             Self::Example => "Examples",
         }
     }

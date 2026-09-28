@@ -1,5 +1,5 @@
 {
-  "schemaVersion": 1,
+  "schemaVersion": 2,
   "artifacts": [
     {
       "kind": "composition",
@@ -141,6 +141,25 @@
       "readme": "hosts/linux/README.md",
       "dependencies": {
         "normal": [],
+        "development": [],
+        "build": []
+      }
+    },
+    {
+      "kind": "instance",
+      "category": "web",
+      "path": "instances/web/http-server",
+      "cargoPackage": "onoal-fabric-instance-http-server",
+      "version": "0.1.0",
+      "description": "Long-running HTTP server Instance artifact for Fabric Ecosystem",
+      "publishable": true,
+      "readme": "instances/web/http-server/README.md",
+      "dependencies": {
+        "normal": [
+          "compositions/web/http-server",
+          "packages/networking/http",
+          "packages/networking/tcp"
+        ],
         "development": [],
         "build": []
       }
