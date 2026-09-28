@@ -93,11 +93,11 @@ Fabric semantic truth.
 
 ## Verification
 
-The canonical repository quality gate runs on pull requests and pushes to
-`main` on Linux with stable Rust. It uses the committed `Cargo.lock` for Cargo
-commands that resolve dependencies.
+The repository has one canonical local verification sequence. Run it from the
+repository root before accepting a change.
 
-Run the same gate locally from the repository root:
+The sequence uses the committed `Cargo.lock` for Cargo commands that resolve
+dependencies:
 
 ```text
 cargo fmt --all -- --check
@@ -112,3 +112,6 @@ cargo run --locked -p fabric-ecosystem-catalog-tool -- validate
 fixture and the example binary smoke tests. Catalog `check` proves the committed
 projection is current with repository source truth; Catalog `validate` proves
 the committed machine document satisfies the strict Catalog v1 contract.
+
+GitHub-hosted CI is not part of the repository verification model. GitHub may
+host the remote repository, but verification is an explicit local contract.
