@@ -445,8 +445,8 @@ checksum = "9f7c3e4beb33f85d45ae3e3a1792185706c8e16d043238c593331cc7cd313b50"
 
 [[package]]
 name = "onoal-fabric"
-version = "1.0.0"
-source = "git+https://github.com/Onoal/fabric.git?rev=0954852ffba9cef8df397e3c1712be3611358073#0954852ffba9cef8df397e3c1712be3611358073"
+version = "1.1.0"
+source = "git+https://github.com/Onoal/fabric.git?rev=be91d64d8db605dba6f1555cf1fcfde3888aa936#be91d64d8db605dba6f1555cf1fcfde3888aa936"
 dependencies = [
  "onoal-fabric-component",
  "onoal-fabric-core",
@@ -459,8 +459,8 @@ dependencies = [
 
 [[package]]
 name = "onoal-fabric-component"
-version = "1.0.0"
-source = "git+https://github.com/Onoal/fabric.git?rev=0954852ffba9cef8df397e3c1712be3611358073#0954852ffba9cef8df397e3c1712be3611358073"
+version = "1.1.0"
+source = "git+https://github.com/Onoal/fabric.git?rev=be91d64d8db605dba6f1555cf1fcfde3888aa936#be91d64d8db605dba6f1555cf1fcfde3888aa936"
 dependencies = [
  "onoal-fabric-core",
  "onoal-fabric-resource",
@@ -494,8 +494,8 @@ dependencies = [
 
 [[package]]
 name = "onoal-fabric-core"
-version = "1.0.0"
-source = "git+https://github.com/Onoal/fabric.git?rev=0954852ffba9cef8df397e3c1712be3611358073#0954852ffba9cef8df397e3c1712be3611358073"
+version = "1.1.0"
+source = "git+https://github.com/Onoal/fabric.git?rev=be91d64d8db605dba6f1555cf1fcfde3888aa936#be91d64d8db605dba6f1555cf1fcfde3888aa936"
 dependencies = [
  "onoal-fabric-host",
  "semver",
@@ -504,8 +504,8 @@ dependencies = [
 
 [[package]]
 name = "onoal-fabric-host"
-version = "1.0.0"
-source = "git+https://github.com/Onoal/fabric.git?rev=0954852ffba9cef8df397e3c1712be3611358073#0954852ffba9cef8df397e3c1712be3611358073"
+version = "1.1.0"
+source = "git+https://github.com/Onoal/fabric.git?rev=be91d64d8db605dba6f1555cf1fcfde3888aa936#be91d64d8db605dba6f1555cf1fcfde3888aa936"
 dependencies = [
  "thiserror",
 ]
@@ -617,8 +617,8 @@ dependencies = [
 
 [[package]]
 name = "onoal-fabric-resource"
-version = "1.0.0"
-source = "git+https://github.com/Onoal/fabric.git?rev=0954852ffba9cef8df397e3c1712be3611358073#0954852ffba9cef8df397e3c1712be3611358073"
+version = "1.1.0"
+source = "git+https://github.com/Onoal/fabric.git?rev=be91d64d8db605dba6f1555cf1fcfde3888aa936#be91d64d8db605dba6f1555cf1fcfde3888aa936"
 dependencies = [
  "semver",
  "sha2",
@@ -627,8 +627,8 @@ dependencies = [
 
 [[package]]
 name = "onoal-fabric-sdk-macros"
-version = "1.0.0"
-source = "git+https://github.com/Onoal/fabric.git?rev=0954852ffba9cef8df397e3c1712be3611358073#0954852ffba9cef8df397e3c1712be3611358073"
+version = "1.1.0"
+source = "git+https://github.com/Onoal/fabric.git?rev=be91d64d8db605dba6f1555cf1fcfde3888aa936#be91d64d8db605dba6f1555cf1fcfde3888aa936"
 dependencies = [
  "proc-macro-crate",
  "proc-macro2",
@@ -639,8 +639,8 @@ dependencies = [
 
 [[package]]
 name = "onoal-fabric-system"
-version = "1.0.0"
-source = "git+https://github.com/Onoal/fabric.git?rev=0954852ffba9cef8df397e3c1712be3611358073#0954852ffba9cef8df397e3c1712be3611358073"
+version = "1.1.0"
+source = "git+https://github.com/Onoal/fabric.git?rev=be91d64d8db605dba6f1555cf1fcfde3888aa936#be91d64d8db605dba6f1555cf1fcfde3888aa936"
 dependencies = [
  "semver",
  "thiserror",
