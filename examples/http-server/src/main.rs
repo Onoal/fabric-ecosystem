@@ -3,16 +3,15 @@ mod client;
 use std::io::Error;
 
 use fabric::prelude::*;
-use fabric_composition_http_server::{build_http_server_composition, HttpServerCompositionConfig};
+use fabric_composition_http_server::{http_server_stack, HttpServerCompositionConfig};
 use fabric_package_networking_http::{HttpResponse, HttpServer, HttpServerInstanceApi};
 use fabric_package_networking_tcp::{TcpTransportInspector, TcpTransportInspectorInstanceApi};
 use futures::executor::block_on;
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
-    let composition = build_http_server_composition(
-        "fabric.ecosystem.example.http-server",
-        HttpServerCompositionConfig::local("api"),
-    )?;
+    let composition = Fabric::new("fabric.ecosystem.example.http-server")?
+        .with(http_server_stack(HttpServerCompositionConfig::local("api")))
+        .build()?;
     let mut instance = composition.materialize_on(
         "fabric.ecosystem.example.http-server.local",
         &HostDescriptor::native(),

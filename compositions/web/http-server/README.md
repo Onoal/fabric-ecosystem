@@ -36,9 +36,17 @@ supports one `HttpServer` Component definition occurrence per built
 `fabric::Composition`. The TCP occurrence name is still explicit, and the stack
 can be reused inside larger systems.
 
-Use `http_server_stack(config)` to contribute the assembly to a larger Fabric
-authoring context, or `build_http_server_composition(id, config)` to build a
-standalone ordinary `fabric::Composition`. Both paths use the same assembly.
+Use `http_server_stack(config)` to contribute the assembly to any Fabric
+authoring context:
+
+```rust
+let composition = Fabric::new("example")?
+    .with(http_server_stack(config))
+    .build()?;
+```
+
+`local_http_server(name)` is the default local convenience form. It contributes
+the same assembly with loopback ephemeral binding for the named TCP occurrence.
 
 Non-goals: routing, application handlers, database access, key-value storage,
 logging, metrics, TLS, public internet exposure, reverse proxying, worker

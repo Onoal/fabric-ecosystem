@@ -273,12 +273,8 @@ pub fn application() -> impl IntoFabricContribution {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use fabric_composition_http_server::{
-        build_http_server_composition, http_server_stack, HttpServerCompositionConfig,
-    };
-    use fabric_composition_local_backend::{
-        build_local_backend_composition, local_backend_stack, LocalBackendCompositionConfig,
-    };
+    use fabric_composition_http_server::{http_server_stack, HttpServerCompositionConfig};
+    use fabric_composition_local_backend::{local_backend_stack, LocalBackendCompositionConfig};
     use fabric_package_networking_http::{HttpResponse, HttpServer, HttpServerInstanceApi};
     use fabric_package_networking_tcp::{TcpTransportInspector, TcpTransportInspectorInstanceApi};
     use futures::executor::block_on;
@@ -595,11 +591,11 @@ mod tests {
         #[cfg(not(target_os = "linux"))]
         let host = HostDescriptor::native();
 
-        let composition = build_http_server_composition(
-            "onoal.package.test.third-party.http",
-            HttpServerCompositionConfig::local("api"),
-        )
-        .expect("composition");
+        let composition = Fabric::new("onoal.package.test.third-party.http")
+            .expect("fabric")
+            .with(http_server_stack(HttpServerCompositionConfig::local("api")))
+            .build()
+            .expect("composition");
         let mut instance = composition
             .materialize_on("onoal.package.test.third-party.http.instance", &host)
             .expect("instance");
@@ -676,16 +672,16 @@ mod tests {
         let host = HostDescriptor::native();
         let database_path = unique_sqlite_path();
 
-        let composition = build_local_backend_composition(
-            "onoal.package.test.third-party.local-backend",
-            LocalBackendCompositionConfig::local(
+        let composition = Fabric::new("onoal.package.test.third-party.local-backend")
+            .expect("fabric")
+            .with(local_backend_stack(LocalBackendCompositionConfig::local(
                 "api",
                 "primary-db",
                 database_path.clone(),
                 "application-log",
-            ),
-        )
-        .expect("local backend composition");
+            )))
+            .build()
+            .expect("local backend composition");
         let mut instance = composition
             .materialize_on(
                 "onoal.package.test.third-party.local-backend.instance",

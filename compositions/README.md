@@ -39,10 +39,15 @@ compositions/<category>/<composition>/
 ├── Cargo.toml
 ├── README.md
 ├── src/
-│   └── lib.rs
+│   ├── lib.rs        # facade and curated re-exports
+│   └── ...           # responsibility modules as earned
 ├── tests/      # when useful
 └── variants/   # only when real variants exist
 ```
+
+A Composition's internal topology follows its assembly responsibilities, not a
+fixed source-file template. Its public API should expose authoring of the
+assembly, not test machinery or a parallel Composition ontology.
 
 A variant is an ecosystem authoring opinion, not a Fabric primitive. Do not
 create `variants/` before real variants exist.

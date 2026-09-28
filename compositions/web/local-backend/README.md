@@ -32,10 +32,14 @@ requiring `RelationalDatabase` and `LogSink`; this Composition does not create a
 router, application handler, controller, repository, dependency-injection
 container, ORM, or Component-to-Component service injection.
 
-Use `local_backend_stack(config)` to contribute the foundation to a larger
-Fabric build, or `build_local_backend_composition(id, config)` to build a
-standalone ordinary `fabric::Composition`. The standalone builder reuses the
-same stack helper.
+Use `local_backend_stack(config)` to contribute the foundation to any Fabric
+authoring context:
+
+```rust
+let composition = Fabric::new("example")?
+    .with(local_backend_stack(config))
+    .build()?;
+```
 
 The default local constructor uses loopback HTTP with an ephemeral port,
 file-backed SQLite at the path you provide, and default Console logging.
