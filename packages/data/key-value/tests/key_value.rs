@@ -6,9 +6,8 @@ use futures::executor::block_on;
 struct StoreExercise {
     first_read: Option<Vec<u8>>,
     replaced: Option<Vec<u8>>,
-    deleted: Option<Vec<u8>>,
     after_delete: Option<Vec<u8>>,
-    missing_delete: Option<Vec<u8>>,
+    missing_delete_succeeded: bool,
 }
 
 #[derive(Clone, Debug, PartialEq, Eq)]
@@ -38,15 +37,14 @@ fabric::component! {
                 let first_read = resolve_resource(self.relations().store.get(key.clone()))?;
                 resolve_resource(self.relations().store.set(key.clone(), second))?;
                 let replaced = resolve_resource(self.relations().store.get(key.clone()))?;
-                let deleted = resolve_resource(self.relations().store.delete(key.clone()))?;
+                resolve_resource(self.relations().store.delete(key.clone()))?;
                 let after_delete = resolve_resource(self.relations().store.get(key.clone()))?;
-                let missing_delete = resolve_resource(self.relations().store.delete(key))?;
+                resolve_resource(self.relations().store.delete(key))?;
                 Ok(StoreExercise {
                     first_read,
                     replaced,
-                    deleted,
                     after_delete,
-                    missing_delete,
+                    missing_delete_succeeded: true,
                 })
             }
 
@@ -192,9 +190,8 @@ fn memory_store_supports_set_get_replace_delete_and_missing_keys() {
 
     assert_eq!(result.first_read, Some(b"fabric".to_vec()));
     assert_eq!(result.replaced, Some(b"ecosystem".to_vec()));
-    assert_eq!(result.deleted, Some(b"ecosystem".to_vec()));
     assert_eq!(result.after_delete, None);
-    assert_eq!(result.missing_delete, None);
+    assert!(result.missing_delete_succeeded);
 
     instance.stop().expect("stop");
 }

@@ -4,7 +4,6 @@ use fabric_package_key_value::{memory_key_value, KeyValue, KeyValueError};
 #[derive(Clone, Debug, PartialEq, Eq)]
 struct QuickstartResult {
     stored: Option<Vec<u8>>,
-    deleted: Option<Vec<u8>>,
     after_delete: Option<Vec<u8>>,
 }
 
@@ -26,11 +25,10 @@ fabric::component! {
             fn write_read_delete(&self, key: String, value: Vec<u8>) -> Result<QuickstartResult, KeyValueError> {
                 resolve_resource(self.relations().store.set(key.clone(), value))?;
                 let stored = resolve_resource(self.relations().store.get(key.clone()))?;
-                let deleted = resolve_resource(self.relations().store.delete(key.clone()))?;
+                resolve_resource(self.relations().store.delete(key.clone()))?;
                 let after_delete = resolve_resource(self.relations().store.get(key))?;
                 Ok(QuickstartResult {
                     stored,
-                    deleted,
                     after_delete,
                 })
             }
@@ -61,10 +59,6 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!(
         "stored: {}",
         display_optional_bytes(result.stored.as_deref())
-    );
-    println!(
-        "deleted: {}",
-        display_optional_bytes(result.deleted.as_deref())
     );
     println!(
         "after delete: {}",

@@ -37,13 +37,15 @@ fabric::adapter! {
                     })
             }
 
-            async fn delete(&self, key: String) -> Result<Option<Vec<u8>>, KeyValueError> {
+            async fn delete(&self, key: String) -> Result<(), KeyValueError> {
                 self.state
                     .get()
                     .entries
                     .lock()
                     .map_err(|_| KeyValueError::delete_failed("memory key-value state lock poisoned"))
-                    .map(|mut entries| entries.remove(&key))
+                    .map(|mut entries| {
+                        entries.remove(&key);
+                    })
             }
         }
     }

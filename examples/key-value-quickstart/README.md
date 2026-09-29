@@ -15,7 +15,6 @@ Expected output includes:
 
 ```text
 stored: fabric
-deleted: fabric
 after delete: missing
 ```
 

@@ -12,7 +12,6 @@ use support::temp_database::TempDatabase;
 #[derive(Clone, Debug, PartialEq, Eq)]
 struct KeyValueResult {
     stored: Option<Vec<u8>>,
-    deleted: Option<Vec<u8>>,
     after_delete: Option<Vec<u8>>,
 }
 
@@ -34,9 +33,9 @@ fabric::component! {
             fn exercise_store(&self) -> Result<KeyValueResult, KeyValueError> {
                 resolve_resource(self.relations().store.set("third-party".to_owned(), b"value".to_vec()))?;
                 let stored = resolve_resource(self.relations().store.get("third-party".to_owned()))?;
-                let deleted = resolve_resource(self.relations().store.delete("third-party".to_owned()))?;
+                resolve_resource(self.relations().store.delete("third-party".to_owned()))?;
                 let after_delete = resolve_resource(self.relations().store.get("third-party".to_owned()))?;
-                Ok(KeyValueResult { stored, deleted, after_delete })
+                Ok(KeyValueResult { stored, after_delete })
             }
         }
     }
@@ -132,7 +131,6 @@ fn external_consumer_uses_key_value_directly() {
         .expect("key-value result");
 
     assert_eq!(result.stored, Some(b"value".to_vec()));
-    assert_eq!(result.deleted, Some(b"value".to_vec()));
     assert_eq!(result.after_delete, None);
 }
 
